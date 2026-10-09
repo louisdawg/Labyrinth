@@ -2,15 +2,14 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [SerializeField] private Transform target;
+    [SerializeField] private float smoothSpeed = 8f;
 
-    // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
+        if (target is null) return;
         
+        Vector3 goal = new Vector3(target.position.x, target.position.y, transform.position.z);
+        transform.position = Vector3.Lerp(transform.position, goal, smoothSpeed * Time.deltaTime);
     }
 }
