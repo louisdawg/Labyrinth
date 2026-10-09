@@ -5,6 +5,12 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private Transform target;
     [SerializeField] private float smoothSpeed = 8f;
 
+    void Start()
+    {
+        if (target == null)
+            target = GameObject.FindWithTag("Player")?.transform;
+    }
+    
     void LateUpdate()
     {
         if (target is null) return;
