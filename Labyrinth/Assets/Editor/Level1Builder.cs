@@ -7,7 +7,7 @@ using UnityEngine.Tilemaps;
 public static class Level1Builder
 {
     // # = Wand, alles andere = Boden
-    // S = Start, Z = Ziel, D = Dornen-Falle (Prefab "Thorns"), F = Fleisch, H = Hinweis (kommen spaeter)
+    // S = Start, Z = Ziel, D = Dornen-Falle (Prefab "Thorns"), F = Fleisch (Prefab "Meat"), H = Hinweis (Prefab "Hint")
     static readonly string[] Layout =
     {
         "###############################",
@@ -35,12 +35,16 @@ public static class Level1Builder
         foreach (Tile t in floorTiles) if (t == null) return;
         foreach (Tile t in wallTiles) if (t == null) return;
 
-        GameObject thornPrefab = FindPrefab("Thorns");
+        GameObject thornPrefab = FindPrefab("Thorns", true);
         if (thornPrefab == null) return;
+        GameObject hintPrefab = FindPrefab("Hint", false);
+        GameObject meatPrefab = FindPrefab("Meat", false);
 
         floor.ClearAllTiles();
         walls.ClearAllTiles();
         Transform obstacles = RecreateParent("Obstacles");
+        Transform pickups = RecreateParent("Pickups");
+        int hintCount = 0;
         Random.InitState(7);
 
         int height = Layout.Length;
@@ -64,8 +68,17 @@ public static class Level1Builder
 
                 if (c == 'D')
                 {
-                    GameObject thorn = (GameObject)PrefabUtility.InstantiatePrefab(thornPrefab, obstacles);
-                    thorn.transform.position = center;
+                    Spawn(thornPrefab, obstacles, center);
+                }
+                else if (c == 'F' && meatPrefab != null)
+                {
+                    Spawn(meatPrefab, pickups, center);
+                }
+                else if (c == 'H' && hintPrefab != null)
+                {
+                    GameObject hint = Spawn(hintPrefab, pickups, center);
+                    SetHintId(hint, hintCount);
+                    hintCount++;
                 }
                 else if (c == 'S') MoveObject("Player", center);
                 else if (c == 'Z') MoveObject("Goal", center);
@@ -74,6 +87,23 @@ public static class Level1Builder
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         Debug.Log("Level1 aufgebaut: " + Layout[0].Length + " x " + height + " Tiles");
+    }
+
+    static GameObject Spawn(GameObject prefab, Transform parent, Vector3 position)
+    {
+        GameObject obj = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+        obj.transform.position = position;
+        return obj;
+    }
+
+    static void SetHintId(GameObject hint, int id)
+    {
+        HintPickup pickup = hint.GetComponent<HintPickup>();
+        if (pickup == null) { Debug.LogWarning("Prefab 'Hint' hat kein HintPickup-Script."); return; }
+
+        SerializedObject so = new SerializedObject(pickup);
+        so.FindProperty("hintId").intValue = id;
+        so.ApplyModifiedProperties();
     }
 
     static void MoveObject(string objectName, Vector3 position)
@@ -98,7 +128,7 @@ public static class Level1Builder
         return map;
     }
 
-    static GameObject FindPrefab(string prefabName)
+    static GameObject FindPrefab(string prefabName, bool required)
     {
         foreach (string guid in AssetDatabase.FindAssets(prefabName + " t:Prefab"))
         {
@@ -106,7 +136,8 @@ public static class Level1Builder
             if (System.IO.Path.GetFileNameWithoutExtension(p) == prefabName)
                 return AssetDatabase.LoadAssetAtPath<GameObject>(p);
         }
-        Debug.LogError("Prefab '" + prefabName + "' nicht gefunden (Assets/Prefabs).");
+        string msg = "Prefab '" + prefabName + "' nicht gefunden (Assets/Prefabs).";
+        if (required) Debug.LogError(msg); else Debug.LogWarning(msg + " Wird uebersprungen.");
         return null;
     }
     
