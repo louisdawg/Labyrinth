@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
         float yInput = Input.GetAxis("Vertical");
 
         moveInput = new Vector2(xInput, yInput);
-        
+
         if (moveInput.sqrMagnitude > 1f)
         {
             moveInput.Normalize();
@@ -27,6 +27,6 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb.linearVelocity = moveInput * speed * GameManager.Instance.SpeedMultiplier;
+        rb.linearVelocity = moveInput * (speed * GameManager.Instance.SpeedMultiplier);
     }
 }
