@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2715375090360708763}
   - component: {fileID: 5882641943760978221}
   - component: {fileID: 8379248758918130301}
+  - component: {fileID: -4008280485928815535}
   m_Layer: 0
   m_Name: Thorns
   m_TagString: Untagged
@@ -151,3 +152,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 978c7a7f480a50446b2f9df0655863a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Obstacle
+--- !u!114 &-4008280485928815535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2422678450905537158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f4b989d0dfddea46b512973ad5cc1d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NewMonoBehaviourScript
