@@ -22,6 +22,7 @@ public class Obstacle : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             triggered = true;
+            GameManager.Instance.OnPlayerDied();
             string scene = SceneManager.GetActiveScene().name;
             SceneManager.LoadScene(scene);
         }
