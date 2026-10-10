@@ -7,19 +7,19 @@ using UnityEngine.Tilemaps;
 public static class Level1Builder
 {
     // # = Wand, alles andere = Boden
-    // S = Start, Z = Ziel, F = Fleisch, H = Hinweis, D = Dornen (Objekte kommen später)
+    // S = Start, Z = Ziel, D = Dornen-Falle (Prefab "Thorns"), F = Fleisch, H = Hinweis (kommen spaeter)
     static readonly string[] Layout =
     {
         "###############################",
-        "#......F.......HD............Z#",
-        "#.#.###.#########.###########.#",
-        "#H#...#H#.....#...#F....#...#.#",
-        "#####.###.###.#.#####.#.#.#.#.#",
-        "#.....#....F#.........#...#H#.#",
-        "#.#####.#####D###########.###.#",
-        "#.......#...#...........DF#...#",
-        "#######D#.#.#.#########.###.#.#",
-        "#S.......F#...#F............#F#",
+        "#.....#F....#F..#..D..#......Z#",
+        "#.#########.###.#.###.#.#####.#",
+        "#.....#.#.#.#.#....F#.....#H..#",
+        "###.###.#.#.#.#D#####.###.#####",
+        "#.#...#.#.#.......#H#..F......#",
+        "#.#.#.#.#.#.#.#####.#.#####.#.#",
+        "#...#F....D.#....F#.........#.#",
+        "#.###.#####.#.#.#.#.###.#####.#",
+        "#S..D...#...#.#.#...#H...F#H..#",
         "###############################",
     };
 
@@ -35,8 +35,12 @@ public static class Level1Builder
         foreach (Tile t in floorTiles) if (t == null) return;
         foreach (Tile t in wallTiles) if (t == null) return;
 
+        GameObject thornPrefab = FindPrefab("Thorns");
+        if (thornPrefab == null) return;
+
         floor.ClearAllTiles();
         walls.ClearAllTiles();
+        Transform obstacles = RecreateParent("Obstacles");
         Random.InitState(7);
 
         int height = Layout.Length;
@@ -44,22 +48,46 @@ public static class Level1Builder
         {
             for (int col = 0; col < Layout[row].Length; col++)
             {
-                Vector3Int pos = new Vector3Int(col, height - 1 - row, 0);
+                int y = height - 1 - row;
+                Vector3Int pos = new Vector3Int(col, y, 0);
+                Vector3 center = new Vector3(col + 0.5f, y + 0.5f, 0f);
+                char c = Layout[row][col];
 
-                if (Layout[row][col] == '#')
+                if (c == '#')
                 {
                     walls.SetTile(pos, Random.value < 0.8f ? wallTiles[0] : wallTiles[1]);
+                    continue;
                 }
-                else
+
+                float r = Random.value;
+                floor.SetTile(pos, r < 0.7f ? floorTiles[0] : (r < 0.85f ? floorTiles[1] : floorTiles[2]));
+
+                if (c == 'D')
                 {
-                    float r = Random.value;
-                    floor.SetTile(pos, r < 0.7f ? floorTiles[0] : (r < 0.85f ? floorTiles[1] : floorTiles[2]));
+                    GameObject thorn = (GameObject)PrefabUtility.InstantiatePrefab(thornPrefab, obstacles);
+                    thorn.transform.position = center;
                 }
+                else if (c == 'S') MoveObject("Player", center);
+                else if (c == 'Z') MoveObject("Goal", center);
             }
         }
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         Debug.Log("Level1 aufgebaut: " + Layout[0].Length + " x " + height + " Tiles");
+    }
+
+    static void MoveObject(string objectName, Vector3 position)
+    {
+        GameObject go = GameObject.Find(objectName);
+        if (go == null) { Debug.LogWarning("Objekt '" + objectName + "' nicht in der Szene."); return; }
+        go.transform.position = position;
+    }
+    
+    static Transform RecreateParent(string parentName)
+    {
+        GameObject old = GameObject.Find(parentName);
+        if (old != null) Object.DestroyImmediate(old);
+        return new GameObject(parentName).transform;
     }
 
     static Tilemap FindTilemap(string objectName)
@@ -70,7 +98,18 @@ public static class Level1Builder
         return map;
     }
 
-    // Erstellt (einmalig) ein Tile-Asset in Assets/Tiles und gibt es zurück
+    static GameObject FindPrefab(string prefabName)
+    {
+        foreach (string guid in AssetDatabase.FindAssets(prefabName + " t:Prefab"))
+        {
+            string p = AssetDatabase.GUIDToAssetPath(guid);
+            if (System.IO.Path.GetFileNameWithoutExtension(p) == prefabName)
+                return AssetDatabase.LoadAssetAtPath<GameObject>(p);
+        }
+        Debug.LogError("Prefab '" + prefabName + "' nicht gefunden (Assets/Prefabs).");
+        return null;
+    }
+    
     static Tile GetTile(string spriteName, bool isWall)
     {
         string path = "Assets/Tiles/" + spriteName + ".asset";
