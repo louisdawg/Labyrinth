@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7988505025897414298}
   - component: {fileID: 3811897362564014830}
   - component: {fileID: 9170280793748073943}
+  - component: {fileID: 1904279336754450060}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -169,4 +170,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 960081939fde67249a6f7ef201c76790, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  speed: 1.5
+  speed: 4
+--- !u!114 &1904279336754450060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5834932162329881691}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0d7d12d9e56aa340b3bede013723a4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
+  pickupRange: 0.6
+  meatPrefab: {fileID: 1098107773618071121, guid: ed2acfe99d3930047b68b3ec58c51ade, type: 3}
+  keyPrefab: {fileID: 0}
