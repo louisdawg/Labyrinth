@@ -2,15 +2,21 @@ using UnityEngine;
 
 public class HintPickup : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [SerializeField] private int hintId;
+
     void Start()
     {
-        
+        if (GameManager.Instance.HasHint(hintId))
+        {
+            Destroy(gameObject);
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    void OnTriggerEnter2D(Collider2D other)
     {
-        
+        if (!other.CompareTag("Player")) return;
+
+        GameManager.Instance.AddHint(hintId);
+        Destroy(gameObject);
     }
 }
