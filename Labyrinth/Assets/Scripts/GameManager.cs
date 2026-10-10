@@ -4,7 +4,6 @@ using UnityEngine;
 
 public enum GameState { Menu, Playing, Paused, GameOver }
 
-// Singleton: wird beim ersten Zugriff automatisch erstellt und bleibt ueber alle Szenen bestehen
 public class GameManager : MonoBehaviour
 {
     public const int TotalHints = 4;
@@ -24,11 +23,10 @@ public class GameManager : MonoBehaviour
 
     [Header("Hunger")]
     [SerializeField] private float maxHunger = 100f;
-    [SerializeField] private float hungerDrainPerSecond = 0.5f;   // sinkt langsam
+    [SerializeField] private float hungerDrainPerSecond = 0.5f;
     [SerializeField] private float meatRestore = 35f;
-    [SerializeField] private float starvedSpeedFactor = 0.6f;     // bei leerem Balken nur langsamer
-
-    // Platzhalter-Texte, Loesung: Mond -> Stern -> Sonne -> Auge
+    [SerializeField] private float starvedSpeedFactor = 0.6f;
+    
     private static readonly string[] hintTexts =
     {
         "Der Mond erwacht vor dem Stern.",
