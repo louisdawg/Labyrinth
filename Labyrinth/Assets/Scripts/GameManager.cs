@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float hungerDrainPerSecond = 0.5f;
     [SerializeField] private float meatRestore = 35f;
     [SerializeField] private float starvedSpeedFactor = 0.6f;
-    
+
     private static readonly string[] hintTexts =
     {
         "Der Mond erwacht vor dem Stern.",
@@ -88,7 +88,7 @@ public class GameManager : MonoBehaviour
         State = newState;
         Time.timeScale = newState == GameState.Paused ? 0f : 1f;
     }
-    
+
     public bool HasHint(int id)
     {
         return foundHints.Contains(id);
@@ -112,12 +112,12 @@ public class GameManager : MonoBehaviour
         if (foundHints.Count == 0) return "Noch keine Hinweise gefunden.";
         return string.Join("\n", foundHints.OrderBy(i => i).Select(i => "- " + GetHintText(i)));
     }
-    
+
     public void Eat()
     {
         hunger = Mathf.Min(maxHunger, hunger + meatRestore);
     }
-    
+
     public SceneItemState GetSceneState(string sceneName)
     {
         if (!sceneStates.TryGetValue(sceneName, out SceneItemState state))
@@ -127,7 +127,8 @@ public class GameManager : MonoBehaviour
         }
         return state;
     }
-    
+
+    // ---------- Tod ----------
     public void OnPlayerDied(Vector2 position)
     {
         if (HeldItem != Item.None)
@@ -136,7 +137,7 @@ public class GameManager : MonoBehaviour
             HeldItem = Item.None;
         }
     }
-    
+
     public void ResetGame()
     {
         foundHints.Clear();
