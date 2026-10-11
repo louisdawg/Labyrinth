@@ -1,19 +1,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public enum GameState { Menu, Playing, Paused, GameOver }
+
+public class ItemRecord
+{
+    public Item item;
+    public Vector2 position;
+}
+
+public class SceneItemState
+{
+    public bool initialized;
+    public List<ItemRecord> items = new List<ItemRecord>();
+}
 
 public class GameManager : MonoBehaviour
 {
     public const int TotalHints = 4;
 
     private static GameManager instance;
+    public static bool HasInstance => instance != null;
     public static GameManager Instance
     {
         get
         {
-            if (instance is null)
+            if (instance == null)
             {
                 instance = new GameObject("GameManager").AddComponent<GameManager>();
             }
@@ -31,11 +45,12 @@ public class GameManager : MonoBehaviour
     {
         "Der Mond erwacht vor dem Stern.",
         "Der Stern verblasst, bevor die Sonne aufgeht.",
-        "Das Auge oeffnet sich zuletzt.",
+        "Das Auge öffnet sich zuletzt.",
         "Die Sonne kommt direkt vor dem Auge."
     };
 
     private readonly HashSet<int> foundHints = new HashSet<int>();
+    private readonly Dictionary<string, SceneItemState> sceneStates = new Dictionary<string, SceneItemState>();
     private float hunger;
 
     public GameState State { get; private set; } = GameState.Playing;
@@ -103,8 +118,32 @@ public class GameManager : MonoBehaviour
         hunger = Mathf.Min(maxHunger, hunger + meatRestore);
     }
     
-    public void OnPlayerDied()
+    public SceneItemState GetSceneState(string sceneName)
     {
+        if (!sceneStates.TryGetValue(sceneName, out SceneItemState state))
+        {
+            state = new SceneItemState();
+            sceneStates[sceneName] = state;
+        }
+        return state;
+    }
+    
+    public void OnPlayerDied(Vector2 position)
+    {
+        if (HeldItem != Item.None)
+        {
+            GetSceneState(SceneManager.GetActiveScene().name).items.Add(new ItemRecord { item = HeldItem, position = position });
+            HeldItem = Item.None;
+        }
+    }
+    
+    public void ResetGame()
+    {
+        foundHints.Clear();
+        sceneStates.Clear();
+        LastHintId = -1;
         HeldItem = Item.None;
+        hunger = maxHunger;
+        SetState(GameState.Playing);
     }
 }
