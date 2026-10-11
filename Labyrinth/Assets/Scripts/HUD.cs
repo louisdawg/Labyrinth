@@ -4,26 +4,32 @@ using UnityEngine.UI;
 
 public class HUD : MonoBehaviour
 {
-    [Header("Anzeigen")]
-    [SerializeField] private Slider hungerSlider;
-    [SerializeField] private TMP_Text hintCounterText;
+    [Header("Hunger (senkrechte Leiste)")]
+    [SerializeField] private Image hungerFill;
+
+    [Header("Item-Slot")]
     [SerializeField] private Image itemIcon;
     [SerializeField] private Sprite meatSprite;
     [SerializeField] private Sprite keySprite;
 
     [Header("Hinweise")]
-    [SerializeField] private TMP_Text popupText;
+    [SerializeField] private TMP_Text hintCounterText;
+    [SerializeField] private GameObject hintPopupPanel;
+    [SerializeField] private TMP_Text hintPopupText;
     [SerializeField] private GameObject notesPanel;
     [SerializeField] private TMP_Text notesText;
-    [SerializeField] private float popupDuration = 4f;
+
+    private static readonly Color green = new Color32(91, 194, 54, 255);
+    private static readonly Color yellow = new Color32(232, 201, 58, 255);
+    private static readonly Color red = new Color32(216, 64, 58, 255);
 
     private int lastHintCount;
-    private float popupTimer;
+    private bool pausedByHud;
 
     void Start()
     {
         lastHintCount = GameManager.Instance.FoundHintCount;
-        popupText.gameObject.SetActive(false);
+        hintPopupPanel.SetActive(false);
         notesPanel.SetActive(false);
     }
 
@@ -31,32 +37,69 @@ public class HUD : MonoBehaviour
     {
         GameManager gm = GameManager.Instance;
 
-        hungerSlider.value = gm.Hunger / gm.MaxHunger;
-        hintCounterText.text = "Hinweise " + gm.FoundHintCount + "/" + GameManager.TotalHints;
+        UpdateHunger(gm);
+        hintCounterText.text = gm.FoundHintCount + " / " + GameManager.TotalHints;
         UpdateItemSlot(gm.HeldItem);
-        
+
         if (gm.FoundHintCount > lastHintCount)
         {
-            popupText.text = "Neuer Hinweis: " + gm.GetHintText(gm.LastHintId);
-            popupText.gameObject.SetActive(true);
-            popupTimer = popupDuration;
+            hintPopupText.text = gm.GetHintText(gm.LastHintId) + "\n\n<size=60%>Weiter mit [Leertaste]</size>";
+            hintPopupPanel.SetActive(true);
+            notesPanel.SetActive(false);
         }
         lastHintCount = gm.FoundHintCount;
 
-        if (popupTimer > 0f)
+        if (hintPopupPanel.activeSelf)
         {
-            popupTimer -= Time.unscaledDeltaTime;
-            if (popupTimer <= 0f) popupText.gameObject.SetActive(false);
+            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Escape))
+            {
+                hintPopupPanel.SetActive(false);
+            }
         }
-        
-        if (Input.GetKeyDown(KeyCode.Tab))
+        else
         {
-            notesPanel.SetActive(!notesPanel.activeSelf);
+            bool tab = Input.GetKeyDown(KeyCode.Tab);
+            bool esc = notesPanel.activeSelf && Input.GetKeyDown(KeyCode.Escape);
+            if (tab || esc) notesPanel.SetActive(!notesPanel.activeSelf);
         }
+
         if (notesPanel.activeSelf)
         {
             notesText.text = gm.GetNotesText();
         }
+
+        UpdatePause(gm);
+    }
+
+    private void UpdatePause(GameManager gm)
+    {
+        bool panelOpen = hintPopupPanel.activeSelf || notesPanel.activeSelf;
+
+        if (panelOpen && gm.State == GameState.Playing)
+        {
+            gm.SetState(GameState.Paused);
+            pausedByHud = true;
+        }
+        else if (!panelOpen && pausedByHud)
+        {
+            gm.SetState(GameState.Playing);
+            pausedByHud = false;
+        }
+    }
+
+    private void UpdateHunger(GameManager gm)
+    {
+        float value = gm.Hunger / gm.MaxHunger;
+        hungerFill.fillAmount = value;
+
+        Color c = value > 0.5f
+            ? Color.Lerp(yellow, green, (value - 0.5f) * 2f)
+            : Color.Lerp(red, yellow, value * 2f);
+        if (value <= 0.2f)
+        {
+            c.a = 0.6f + 0.4f * Mathf.PingPong(Time.unscaledTime * 3f, 1f);
+        }
+        hungerFill.color = c;
     }
 
     private void UpdateItemSlot(Item item)
@@ -67,5 +110,13 @@ public class HUD : MonoBehaviour
 
         itemIcon.sprite = icon;
         itemIcon.enabled = icon is not null;
+    }
+
+    void OnDestroy()
+    {
+        if (pausedByHud && GameManager.HasInstance)
+        {
+            GameManager.Instance.SetState(GameState.Playing);
+        }
     }
 }
