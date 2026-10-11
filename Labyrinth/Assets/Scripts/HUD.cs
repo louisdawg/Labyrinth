@@ -14,17 +14,25 @@ public class HUD : MonoBehaviour
 
     [Header("Hinweise")]
     [SerializeField] private TMP_Text hintCounterText;
+
     [SerializeField] private GameObject hintPopupPanel;
     [SerializeField] private TMP_Text hintPopupText;
     [SerializeField] private GameObject notesPanel;
     [SerializeField] private TMP_Text notesText;
+
+    [Header("Hinweis-Fenster")]
+    [SerializeField] private float charactersPerSecond = 30f;
+    [SerializeField] private float autoCloseSeconds = 8f;
 
     private static readonly Color green = new Color32(91, 194, 54, 255);
     private static readonly Color yellow = new Color32(232, 201, 58, 255);
     private static readonly Color red = new Color32(216, 64, 58, 255);
 
     private int lastHintCount;
-    private bool pausedByHud;
+    private string fullHintText = "";
+    private float typedCharacters;
+    private bool typing;
+    private float closeTimer;
 
     void Start()
     {
@@ -43,18 +51,13 @@ public class HUD : MonoBehaviour
 
         if (gm.FoundHintCount > lastHintCount)
         {
-            hintPopupText.text = gm.GetHintText(gm.LastHintId) + "\n\n<size=60%>Weiter mit [Leertaste]</size>";
-            hintPopupPanel.SetActive(true);
-            notesPanel.SetActive(false);
+            OpenHintPopup(gm.GetHintText(gm.LastHintId));
         }
         lastHintCount = gm.FoundHintCount;
 
         if (hintPopupPanel.activeSelf)
         {
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Escape))
-            {
-                hintPopupPanel.SetActive(false);
-            }
+            UpdateHintPopup();
         }
         else
         {
@@ -67,23 +70,47 @@ public class HUD : MonoBehaviour
         {
             notesText.text = gm.GetNotesText();
         }
-
-        UpdatePause(gm);
     }
 
-    private void UpdatePause(GameManager gm)
+    private void OpenHintPopup(string text)
     {
-        bool panelOpen = hintPopupPanel.activeSelf || notesPanel.activeSelf;
+        fullHintText = text;
+        typedCharacters = 0f;
+        typing = true;
+        closeTimer = 0f;
 
-        if (panelOpen && gm.State == GameState.Playing)
+        hintPopupText.text = fullHintText;
+        hintPopupText.maxVisibleCharacters = 0;
+
+        hintPopupPanel.SetActive(true);
+        notesPanel.SetActive(false);
+    }
+
+    private void UpdateHintPopup()
+    {
+        bool confirm = Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Escape);
+
+        if (typing)
         {
-            gm.SetState(GameState.Paused);
-            pausedByHud = true;
+            typedCharacters += charactersPerSecond * Time.deltaTime;
+            if (confirm) typedCharacters = fullHintText.Length;
+
+            hintPopupText.maxVisibleCharacters = Mathf.FloorToInt(typedCharacters);
+
+            if (typedCharacters >= fullHintText.Length)
+            {
+                typing = false;
+                hintPopupText.text = fullHintText + "\n\n<size=60%>[Leertaste]</size>";
+                hintPopupText.maxVisibleCharacters = 99999;
+                closeTimer = autoCloseSeconds;
+            }
+            return;
         }
-        else if (!panelOpen && pausedByHud)
+
+        closeTimer -= Time.deltaTime;
+        if (confirm || closeTimer <= 0f)
         {
-            gm.SetState(GameState.Playing);
-            pausedByHud = false;
+            hintPopupPanel.SetActive(false);
         }
     }
 
@@ -109,14 +136,6 @@ public class HUD : MonoBehaviour
         else if (item == Item.Schluessel) icon = keySprite;
 
         itemIcon.sprite = icon;
-        itemIcon.enabled = icon is not null;
-    }
-
-    void OnDestroy()
-    {
-        if (pausedByHud && GameManager.HasInstance)
-        {
-            GameManager.Instance.SetState(GameState.Playing);
-        }
+        itemIcon.enabled = icon != null;
     }
 }
