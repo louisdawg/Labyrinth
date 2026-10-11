@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayerAnimator : MonoBehaviour
 {
-    [Header("Koerper")]
+    [Header("Körper")]
     [SerializeField] private SpriteRenderer body;
     [SerializeField] private Sprite idleSprite;
     [SerializeField] private Sprite[] walkFrames;
