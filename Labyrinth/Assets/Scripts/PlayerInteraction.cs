@@ -1,13 +1,14 @@
 using UnityEngine;
 
+// E = aufheben / droppen, F = Fleisch essen
 public class PlayerInteraction : MonoBehaviour
 {
     [SerializeField] private float pickupRange = 0.6f;
-    [SerializeField] private GameObject meatPrefab;
-    [SerializeField] private GameObject keyPrefab;
 
     void Update()
     {
+        if (GameManager.Instance.State != GameState.Playing) return;
+
         if (Input.GetKeyDown(KeyCode.E)) PickupOrDrop();
         if (Input.GetKeyDown(KeyCode.F)) Eat();
     }
@@ -15,42 +16,46 @@ public class PlayerInteraction : MonoBehaviour
     private void PickupOrDrop()
     {
         GameManager gm = GameManager.Instance;
-        
+        WorldItemManager world = WorldItemManager.Instance;
+        if (world is null)
+        {
+            Debug.LogWarning("Kein WorldItemManager in der Szene.");
+            return;
+        }
+
         if (gm.HeldItem != Item.None)
         {
-            GameObject prefab = GetPrefab(gm.HeldItem);
-            if (prefab is null) return;
-
-            Instantiate(prefab, transform.position, Quaternion.identity);
+            world.DropItem(gm.HeldItem, transform.position);
             gm.HeldItem = Item.None;
             return;
         }
-        
+
         ItemPickup nearest = FindNearestPickup();
-        if (nearest is null) return;
+        if (nearest == null) return;
 
         gm.HeldItem = nearest.item;
-        Destroy(nearest.gameObject);
+        world.RemoveItem(nearest);
     }
 
     private void Eat()
     {
         GameManager gm = GameManager.Instance;
-        
+
         if (gm.HeldItem == Item.Fleisch)
         {
             gm.Eat();
             gm.HeldItem = Item.None;
             return;
         }
-        
+
         if (gm.HeldItem != Item.None) return;
 
+        WorldItemManager world = WorldItemManager.Instance;
         ItemPickup nearest = FindNearestPickup();
-        if (nearest is not null && nearest.item == Item.Fleisch)
+        if (world is not null && nearest is not null && nearest.item == Item.Fleisch)
         {
             gm.Eat();
-            Destroy(nearest.gameObject);
+            world.RemoveItem(nearest);
         }
     }
 
@@ -73,15 +78,5 @@ public class PlayerInteraction : MonoBehaviour
             }
         }
         return best;
-    }
-
-    private GameObject GetPrefab(Item item)
-    {
-        switch (item)
-        {
-            case Item.Fleisch: return meatPrefab;
-            case Item.Schluessel: return keyPrefab;
-            default: return null;
-        }
     }
 }
