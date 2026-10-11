@@ -9,7 +9,7 @@ public class Obstacle : MonoBehaviour
     {
         Check(collision);
     }
-    
+
     void OnCollisionStay2D(Collision2D collision)
     {
         Check(collision);
@@ -22,7 +22,9 @@ public class Obstacle : MonoBehaviour
         if (collision.gameObject.CompareTag("Player"))
         {
             triggered = true;
-            GameManager.Instance.OnPlayerDied();
+
+            GameManager.Instance.OnPlayerDied(collision.transform.position);
+
             string scene = SceneManager.GetActiveScene().name;
             SceneManager.LoadScene(scene);
         }
