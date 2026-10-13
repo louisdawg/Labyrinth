@@ -37,9 +37,9 @@ public class GameManager : MonoBehaviour
 
     [Header("Hunger")]
     [SerializeField] private float maxHunger = 100f;
-    [SerializeField] private float hungerDrainPerSecond = 0.5f;
-    [SerializeField] private float meatRestore = 35f;
-    [SerializeField] private float starvedSpeedFactor = 0.6f;
+    [SerializeField] private float hungerDrainPerSecond = 1f;
+    [SerializeField] private float meatRestore = 20f;
+    [SerializeField] private float starvedSpeedFactor = 1f;
 
     private static readonly string[] hintTexts =
     {
