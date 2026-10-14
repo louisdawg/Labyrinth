@@ -1,16 +1,43 @@
 using UnityEngine;
 
 // E = aufheben / droppen, F = Fleisch essen
+// Zeigt ein kleines [E]-Symbol über dem nächsten Item in Reichweite.
 public class PlayerInteraction : MonoBehaviour
 {
     [SerializeField] private float pickupRange = 0.6f;
 
     void Update()
     {
-        if (GameManager.Instance.State != GameState.Playing) return;
+        if (GameManager.Instance.State != GameState.Playing)
+        {
+            InteractPrompt.Hide();
+            return;
+        }
 
         if (Input.GetKeyDown(KeyCode.E)) PickupOrDrop();
         if (Input.GetKeyDown(KeyCode.F)) Eat();
+
+        UpdatePrompt();
+    }
+
+    private void UpdatePrompt()
+    {
+        // Mit vollem Mund gibt es nichts aufzuheben (E legt ab, das steht in der Legende)
+        if (GameManager.Instance.HeldItem != Item.None)
+        {
+            InteractPrompt.Hide();
+            return;
+        }
+
+        ItemPickup nearest = FindNearestPickup();
+        if (nearest == null)
+        {
+            InteractPrompt.Hide();
+            return;
+        }
+
+        string text = nearest.item == Item.Fleisch ? "[E] [F]" : "[E]";
+        InteractPrompt.Show(nearest.transform.position, text);
     }
 
     private void PickupOrDrop()
@@ -27,6 +54,7 @@ public class PlayerInteraction : MonoBehaviour
         {
             world.DropItem(gm.HeldItem, transform.position);
             gm.HeldItem = Item.None;
+            gm.UsedInteract = true;
             return;
         }
 
@@ -35,6 +63,7 @@ public class PlayerInteraction : MonoBehaviour
 
         gm.HeldItem = nearest.item;
         world.RemoveItem(nearest);
+        gm.UsedInteract = true;
     }
 
     private void Eat()
@@ -45,6 +74,7 @@ public class PlayerInteraction : MonoBehaviour
         {
             gm.Eat();
             gm.HeldItem = Item.None;
+            gm.UsedEat = true;
             return;
         }
 
@@ -56,6 +86,7 @@ public class PlayerInteraction : MonoBehaviour
         {
             gm.Eat();
             world.RemoveItem(nearest);
+            gm.UsedEat = true;
         }
     }
 
