@@ -56,6 +56,11 @@ public class GameManager : MonoBehaviour
     public GameState State { get; private set; } = GameState.Playing;
     public Item HeldItem { get; set; } = Item.None;
 
+    // Tasten-Legende im HUD: Eintrag verschwindet, sobald die Taste einmal benutzt wurde
+    public bool UsedInteract { get; set; }
+    public bool UsedEat { get; set; }
+    public bool UsedNotes { get; set; }
+
     public float Hunger => hunger;
     public float MaxHunger => maxHunger;
     public float SpeedMultiplier => hunger <= 0f ? starvedSpeedFactor : 1f;
@@ -144,6 +149,9 @@ public class GameManager : MonoBehaviour
         sceneStates.Clear();
         LastHintId = -1;
         HeldItem = Item.None;
+        UsedInteract = false;
+        UsedEat = false;
+        UsedNotes = false;
         hunger = maxHunger;
         SetState(GameState.Playing);
     }
