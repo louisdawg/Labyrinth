@@ -20,6 +20,9 @@ public class HUD : MonoBehaviour
     [SerializeField] private GameObject notesPanel;
     [SerializeField] private TMP_Text notesText;
 
+    [Header("Tasten-Legende")]
+    [SerializeField] private TMP_Text legendText;
+
     [Header("Hinweis-Fenster")]
     [SerializeField] private float charactersPerSecond = 30f;
     [SerializeField] private float autoCloseSeconds = 8f;
@@ -28,6 +31,7 @@ public class HUD : MonoBehaviour
     private static readonly Color yellow = new Color32(232, 201, 58, 255);
     private static readonly Color red = new Color32(216, 64, 58, 255);
 
+    private int lastLegendMask = -1;
     private int lastHintCount;
     private string fullHintText = "";
     private float typedCharacters;
@@ -69,7 +73,27 @@ public class HUD : MonoBehaviour
         if (notesPanel.activeSelf)
         {
             notesText.text = gm.GetNotesText();
+            gm.UsedNotes = true;
         }
+
+        UpdateLegend(gm);
+    }
+
+    // Zeigt nur die Tasten, die der Spieler noch nie benutzt hat
+    private void UpdateLegend(GameManager gm)
+    {
+        if (legendText == null) return;
+
+        int mask = (gm.UsedInteract ? 1 : 0) | (gm.UsedEat ? 2 : 0) | (gm.UsedNotes ? 4 : 0);
+        if (mask == lastLegendMask) return;
+        lastLegendMask = mask;
+
+        string text = "";
+        if (!gm.UsedInteract) text += "<b>E</b>  aufheben / ablegen\n";
+        if (!gm.UsedEat) text += "<b>F</b>  essen\n";
+        if (!gm.UsedNotes) text += "<b>Tab</b>  Notizen\n";
+
+        legendText.text = text.TrimEnd('\n');
     }
 
     private void OpenHintPopup(string text)
