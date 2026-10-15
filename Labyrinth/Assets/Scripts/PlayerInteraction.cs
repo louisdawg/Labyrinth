@@ -14,7 +14,7 @@ public class PlayerInteraction : MonoBehaviour
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.E)) PickupOrDrop();
+        if (Input.GetKeyDown(KeyCode.E)) UseOrPickupOrDrop();
         if (Input.GetKeyDown(KeyCode.F)) Eat();
 
         UpdatePrompt();
@@ -22,6 +22,18 @@ public class PlayerInteraction : MonoBehaviour
 
     private void UpdatePrompt()
     {
+        // Tür, Hebel usw. haben Vorrang
+        IInteractable interactable = FindNearestInteractable();
+        if (interactable != null)
+        {
+            string prompt = interactable.GetPrompt(GameManager.Instance);
+            if (prompt != null)
+            {
+                InteractPrompt.Show(interactable.PromptPosition, prompt);
+                return;
+            }
+        }
+
         // Mit vollem Mund gibt es nichts aufzuheben (E legt ab, das steht in der Legende)
         if (GameManager.Instance.HeldItem != Item.None)
         {
@@ -38,6 +50,21 @@ public class PlayerInteraction : MonoBehaviour
 
         string text = nearest.item == Item.Fleisch ? "[E] [F]" : "[E]";
         InteractPrompt.Show(nearest.transform.position, text);
+    }
+
+    private void UseOrPickupOrDrop()
+    {
+        GameManager gm = GameManager.Instance;
+
+        IInteractable interactable = FindNearestInteractable();
+        if (interactable != null && interactable.CanInteract(gm))
+        {
+            interactable.Interact(gm);
+            gm.UsedInteract = true;
+            return;
+        }
+
+        PickupOrDrop();
     }
 
     private void PickupOrDrop()
@@ -88,6 +115,27 @@ public class PlayerInteraction : MonoBehaviour
             world.RemoveItem(nearest);
             gm.UsedEat = true;
         }
+    }
+
+    private IInteractable FindNearestInteractable()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickupRange);
+        IInteractable best = null;
+        float bestDistance = float.MaxValue;
+
+        foreach (Collider2D hit in hits)
+        {
+            IInteractable candidate = hit.GetComponent<IInteractable>();
+            if (candidate == null) continue;
+
+            float distance = Vector2.Distance(transform.position, hit.transform.position);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = candidate;
+            }
+        }
+        return best;
     }
 
     private ItemPickup FindNearestPickup()
