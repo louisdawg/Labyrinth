@@ -61,6 +61,10 @@ public class GameManager : MonoBehaviour
     public bool UsedEat { get; set; }
     public bool UsedNotes { get; set; }
 
+    // Level 2: Zustand bleibt auch nach einem Tod erhalten
+    public bool PuzzleSolved { get; set; }
+    public bool DoorOpened { get; set; }
+
     public float Hunger => hunger;
     public float MaxHunger => maxHunger;
     public float SpeedMultiplier => hunger <= 0f ? starvedSpeedFactor : 1f;
@@ -123,6 +127,11 @@ public class GameManager : MonoBehaviour
         hunger = Mathf.Min(maxHunger, hunger + meatRestore);
     }
 
+    public void LoseHunger(float amount)
+    {
+        hunger = Mathf.Max(0f, hunger - amount);
+    }
+
     public SceneItemState GetSceneState(string sceneName)
     {
         if (!sceneStates.TryGetValue(sceneName, out SceneItemState state))
@@ -152,6 +161,8 @@ public class GameManager : MonoBehaviour
         UsedInteract = false;
         UsedEat = false;
         UsedNotes = false;
+        PuzzleSolved = false;
+        DoorOpened = false;
         hunger = maxHunger;
         SetState(GameState.Playing);
     }
