@@ -1,17 +1,36 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerSpawn : MonoBehaviour
 {
-    [SerializeField] Transform returnPoint;
+    [SerializeField] Transform returnPoint;     // Ankunft von hinten (Level 2 -> Level 1)
+    [SerializeField] Transform dungeonSpawn;    // Respawn hinter der Tür (Level 2), vom LevelBuilder gesetzt
+
+    // Merkt sich, welche Szene zuletzt geladen wurde: gleiche Szene nochmal = Neustart nach Tod
+    private static string lastScene;
 
     void Awake()
     {
-        if (LevelGoal.ArrivalDirection >= 0 || returnPoint == null) return;
+        string scene = SceneManager.GetActiveScene().name;
+        bool isRestart = scene == lastScene;
+        lastScene = scene;
 
+        // Tür schon geöffnet und gestorben: im Dungeon neu starten, nicht im Rätselraum
+        if (isRestart && dungeonSpawn != null && GameManager.Instance.DoorOpened)
+        {
+            MovePlayer(dungeonSpawn.position);
+            return;
+        }
+
+        if (LevelGoal.ArrivalDirection >= 0 || returnPoint == null) return;
+        MovePlayer(returnPoint.position);
+    }
+
+    private void MovePlayer(Vector3 pos)
+    {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player == null) return;
 
-        Vector3 pos = returnPoint.position;
         player.transform.position = pos;
 
         Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
