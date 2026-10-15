@@ -12,6 +12,10 @@ public static class LevelBuilder
     // S  Start           Z  Ziel (Objekt "Goal")      X  Ausgang zurück (Objekt "Exit")
     // D  Dornen-Falle    F  Fleisch                   H  Hinweis
     // 1-4 Symbol-Platten K  Schlüssel-Altar          T  Tür
+    // P  Respawn hinter der Tür (Objekt "DungeonSpawn", wird automatisch angelegt und verknüpft)
+    // V  Hebel (Prefab "Lever")   G  Tor (Prefab "Gate")   M  Slime (Prefab "Slime")   W  Wärter (Prefab "Guard")
+    // L  Wand mit Fackel (Wandtile + Prefab "Torch")
+    // Fehlende Prefabs werden einmal gewarnt und übersprungen.
 
     class LevelDef
     {
@@ -37,19 +41,53 @@ public static class LevelBuilder
         "###############################",
     };
 
+    // Level 2: Raetselraum (links), Hub in der Mitte, vier Nebenraeume (N, S, NO, SO), Tor, Endraum (rechts)
     static readonly string[] Level2Layout =
     {
-        "##########################",
-        "#....#H#....##############",
-        "#....#D#....###..#.FD..#.#",
-        "#.1.......2.###..D..D..#.#",
-        "#...#...#...###..D..D..D.#",
-        "#XS...K...F.T....D..D..DZ#",
-        "#...#...#...###..D..D..D.#",
-        "#.3.......4.###..D..#..D.#",
-        "#...........###..#..#F.D.#",
-        "#.....F.....##############",
-        "##########################",
+        "###################################################",
+        "################....V....##########################",
+        "################.........##########################",
+        "#######################D###########################",
+        "################........F##########################",
+        "#################D#################################",
+        "################.........##########################",
+        "################.........##########################",
+        "####################.########.........#############",
+        "####################.########.#..M..#V#############",
+        "###################L.L#######...#.#...#############",
+        "###############...........###.........#####L###L###",
+        "#....#H#....###.F.........###...#.#...###.........#",
+        "#....#D#....###...............#..M..#.###.........#",
+        "#.1.......2.###...#...#...###.F.....F.###.........#",
+        "#...#...#...L#L...........#L############L.........#",
+        "#XS...K...F.TP.............G..................W..Z#",
+        "#...#...#...L#L...........#L############L.........#",
+        "#.3.......4.###...#...#...###.........###.........#",
+        "#...........###...............#.#.#.#.###.........#",
+        "#.....F.....###.........F.###..D......###.........#",
+        "###############...........###.#.#.#.#.#####L###L###",
+        "###################L.L#######......D..#############",
+        "####################.########.#.#.#.#.#############",
+        "####################.########....F...V#############",
+        "################.F.......##########################",
+        "########################D##########################",
+        "################......D..##########################",
+        "################D##################################",
+        "################..D......##########################",
+        "########################D##########################",
+        "################....V....##########################",
+        "###################################################",
+    };
+
+    // Ordnung in der Hierarchy: erster Eintrag = Gruppe, danach ihre Kinder (nach Namen gesucht).
+    // Fehlende Objekte werden uebersprungen, leere Gruppen nicht angelegt.
+    static readonly string[][] HierarchyPlan =
+    {
+        new[] { "Environment", "Grid" },
+        new[] { "Gameplay", "Obstacles", "Pickups", "Puzzle", "Mechanics", "Enemies", "NPCs", "Torches" },
+        new[] { "Actors", "Player", "Goal", "Exit", "PlayerSpawn", "DungeonSpawn" },
+        new[] { "Systems", "Main Camera", "WorldItems", "LevelLighting", "Global Light 2D" },
+        new[] { "UI", "Canvas", "EventSystem" },
     };
 
     static LevelDef GetDef(string sceneName)
@@ -110,6 +148,10 @@ public static class LevelBuilder
         DestroyGroup("Obstacles");
         DestroyGroup("Pickups");
         DestroyGroup("Puzzle");
+        DestroyGroup("Mechanics");
+        DestroyGroup("Enemies");
+        DestroyGroup("NPCs");
+        DestroyGroup("Torches");
 
         Dictionary<string, Transform> groups = new Dictionary<string, Transform>();
         Dictionary<string, GameObject> prefabs = new Dictionary<string, GameObject>();
@@ -127,10 +169,11 @@ public static class LevelBuilder
                 Vector3 center = new Vector3(col + 0.5f, y + 0.5f, 0f);
                 char c = def.Layout[row][col];
 
-                if (c == '#')
+                if (c == '#' || c == 'L')
                 {
                     bool first = Random.value < 0.8f || wallTiles.Length == 1;
                     walls.SetTile(pos, first ? wallTiles[0] : wallTiles[1]);
+                    if (c == 'L') SpawnWallTorch(prefabs, groups, center);
                     continue;
                 }
 
@@ -139,6 +182,7 @@ public static class LevelBuilder
                 if (c == 'S') { MoveObject("Player", center); continue; }
                 if (c == 'Z') { MoveObject("Goal", center); continue; }
                 if (c == 'X') { MoveObject("Exit", center); continue; }
+                if (c == 'P') { PlaceDungeonSpawn(center); continue; }
 
                 string prefabName = PrefabNameFor(c, def);
                 if (prefabName == null) continue;
@@ -155,12 +199,90 @@ public static class LevelBuilder
                 else if (c >= '1' && c <= '4')
                 {
                     obj.name = prefabName + "_" + c;
+                    SetupPlate(obj, c);
                 }
             }
         }
 
+        OrganizeHierarchy();
+
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         Debug.Log(sceneName + " aufgebaut: " + def.Layout[0].Length + " x " + height + " Tiles");
+    }
+
+    [MenuItem("Labyrinth/Hierarchie ordnen (aktive Szene)")]
+    static void OrganizeHierarchyMenu()
+    {
+        OrganizeHierarchy();
+        EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+    }
+
+    static void OrganizeHierarchy()
+    {
+        int rootIndex = 0;
+        foreach (string[] entry in HierarchyPlan)
+        {
+            Transform group = null;
+            int order = 0;
+
+            for (int i = 1; i < entry.Length; i++)
+            {
+                GameObject go = GameObject.Find(entry[i]);
+                if (go == null) continue;
+
+                if (group == null) group = GetOrCreateRoot(entry[0]);
+                go.transform.SetParent(group, true);   // true = Weltposition bleibt gleich
+                go.transform.SetSiblingIndex(order++);
+            }
+
+            if (group != null) group.SetSiblingIndex(rootIndex++);
+        }
+    }
+
+    static Transform GetOrCreateRoot(string groupName)
+    {
+        GameObject go = GameObject.Find(groupName);
+        if (go == null) go = new GameObject(groupName);
+        return go.transform;
+    }
+
+    static void SetupPlate(GameObject obj, char c)
+    {
+        SymbolPlate plate = obj.GetComponent<SymbolPlate>();
+        if (plate == null) { Debug.LogWarning("Prefab 'SymbolPlate' hat kein SymbolPlate-Script."); return; }
+
+        plate.Setup((Symbol)(c - '1'));   // '1' Sonne, '2' Mond, '3' Stern, '4' Auge
+        PrefabUtility.RecordPrefabInstancePropertyModifications(plate);
+
+        SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
+        if (sr != null) PrefabUtility.RecordPrefabInstancePropertyModifications(sr);
+    }
+
+    static void PlaceDungeonSpawn(Vector3 position)
+    {
+        GameObject spawn = GameObject.Find("DungeonSpawn");
+        if (spawn == null) spawn = new GameObject("DungeonSpawn");
+        spawn.transform.position = position;
+
+        PlayerSpawn playerSpawn = Object.FindFirstObjectByType<PlayerSpawn>();
+        if (playerSpawn == null)
+        {
+            Debug.LogWarning("Kein PlayerSpawn in der Szene, DungeonSpawn ist nicht verknuepft.");
+            return;
+        }
+
+        SerializedObject so = new SerializedObject(playerSpawn);
+        SerializedProperty prop = so.FindProperty("dungeonSpawn");
+        if (prop == null) { Debug.LogWarning("PlayerSpawn hat kein Feld 'dungeonSpawn' (neues PlayerSpawn.cs eingespielt?)."); return; }
+        prop.objectReferenceValue = spawn.transform;
+        so.ApplyModifiedProperties();
+    }
+
+    static void SpawnWallTorch(Dictionary<string, GameObject> prefabs, Dictionary<string, Transform> groups, Vector3 center)
+    {
+        GameObject prefab = GetPrefab(prefabs, "Torch");
+        if (prefab == null) return;
+        Spawn(prefab, GetGroup(groups, "Torches"), center);
     }
 
     static string PrefabNameFor(char c, LevelDef def)
@@ -173,6 +295,10 @@ public static class LevelBuilder
             case '1': case '2': case '3': case '4': return "SymbolPlate";
             case 'K': return "KeyAltar";
             case 'T': return "Door";
+            case 'V': return "Lever";
+            case 'G': return "Gate";
+            case 'M': return "Slime";
+            case 'W': return "Guard";
             default: return null;
         }
     }
@@ -181,6 +307,9 @@ public static class LevelBuilder
     {
         if (c == 'D') return "Obstacles";
         if (c == 'F' || c == 'H') return "Pickups";
+        if (c == 'V' || c == 'G') return "Mechanics";
+        if (c == 'M') return "Enemies";
+        if (c == 'W') return "NPCs";
         return "Puzzle";
     }
 
