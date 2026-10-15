@@ -2848,7 +2848,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldItemManager
   meatPrefab: {fileID: 1098107773618071121, guid: ed2acfe99d3930047b68b3ec58c51ade, type: 3}
-  keyPrefab: {fileID: 0}
+  keyPrefab: {fileID: 3299719629427085563, guid: 6f5df69c3dc08bd47867656cfe4da31b, type: 3}
   floorMap: {fileID: 164406183}
   wallMap: {fileID: 966024726}
   spawnInterval: 20
