@@ -15,7 +15,12 @@ public static class LevelBuilder
     // P  Respawn hinter der Tür (Objekt "DungeonSpawn", wird automatisch angelegt und verknüpft)
     // V  Hebel (Prefab "Lever")   G  Tor (Prefab "Gate")   M  Slime (Prefab "Slime")   W  Wärter (Prefab "Guard")
     // L  Wand mit Fackel (Wandtile + Prefab "Torch")
+    // >  Dornen-Welle nach Osten, <  Dornen-Welle nach Westen (Prefab "Thorns", Phase nach Spalte, siehe WaveStep)
     // Fehlende Prefabs werden einmal gewarnt und übersprungen.
+
+    // Dornen-Wellen: Sekunden Verzögerung pro Tile. Geschwindigkeit der Welle = 1 / WaveStep Tiles pro Sekunde.
+    // Kleiner = schnellere Welle = schwerer (Spielertempo zum Vergleich: Speed am PlayerController).
+    const float WaveStep = 0.35f;
 
     class LevelDef
     {
@@ -45,37 +50,37 @@ public static class LevelBuilder
     static readonly string[] Level2Layout =
     {
         "###################################################",
-        "################....V....##########################",
-        "################.........##########################",
-        "#######################D###########################",
-        "################........F##########################",
-        "#################D#################################",
-        "################.........##########################",
-        "################.........##########################",
-        "####################.########.........#############",
-        "####################.########.#..M..#V#############",
-        "###################L.L#######...#.#...#############",
-        "###############...........###.........#####L###L###",
-        "#....#H#....###.F.........###...#.#...###.........#",
-        "#....#D#....###...............#..M..#.###.........#",
-        "#.1.......2.###...#...#...###.F.....F.###.........#",
-        "#...#...#...L#L...........#L############L.........#",
-        "#XS...K...F.TP.............G..................W..Z#",
-        "#...#...#...L#L...........#L############L.........#",
-        "#.3.......4.###...#...#...###.........###.........#",
-        "#...........###...............#.#.#.#.###.........#",
-        "#.....F.....###.........F.###..D......###.........#",
-        "###############...........###.#.#.#.#.#####L###L###",
-        "###################L.L#######......D..#############",
+        "###################################################",
+        "########################V##########################",
+        "################.<<<<<<<.##########################",
+        "################.##L###L.##########################",
+        "################.>>>>>>>.##########################",
+        "################.##################################",
+        "###############L..F...F..##########################",
+        "####################.########..F...F..#############",
+        "####################.#######L.#..M..#V#############",
+        "###################L.L#######...#.L...#############",
+        "#L#############...........###.........#####L###L###",
+        "#....LH#....###.F...F...F.###...#.#...###.........#",
+        "#....#D#...F###...............#..M..#.###.F.....F.#",
+        "#.1.......2.###...#...L...###.F.....F.###...L.....L",
+        "#...#...#...L#L...........#L#####L######L.........#",
+        "#XS...K...F.TP.............G......F...........W..Z#",
+        "L...L...L...L#L...........#L############L.........#",
+        "#.3.......4.###...L...L...###.........###...L.....#",
+        "#...........###...............#.#.#.#.###.F.....F.#",
+        "#..F..F.....###.F...F...F.###..D......###.........#",
+        "###############...........L##.#.#.#.#.#####L###L###",
+        "###############L###L.L#######......D..#############",
         "####################.########.#.#.#.#.#############",
-        "####################.########....F...V#############",
-        "################.F.......##########################",
-        "########################D##########################",
-        "################......D..##########################",
-        "################D##################################",
-        "################..D......##########################",
-        "########################D##########################",
-        "################....V....##########################",
+        "####################.########F...F...V#############",
+        "################..F...F..##########################",
+        "######################L#.##########################",
+        "################.<<<<<<<.##########################",
+        "################.##L####.##########################",
+        "################.>>>>>>>.##########################",
+        "################V##################################",
+        "###################################################",
         "###################################################",
     };
 
@@ -201,6 +206,10 @@ public static class LevelBuilder
                     obj.name = prefabName + "_" + c;
                     SetupPlate(obj, c);
                 }
+                else if (c == '>' || c == '<')
+                {
+                    SetWaveOffset(obj, col, c == '>');
+                }
             }
         }
 
@@ -278,6 +287,20 @@ public static class LevelBuilder
         so.ApplyModifiedProperties();
     }
 
+    // Dornen einer Bahn bekommen je nach Spalte eine Phase, dadurch läuft eine Welle durch die Bahn
+    static void SetWaveOffset(GameObject thorn, int column, bool eastward)
+    {
+        TimedThorns thorns = thorn.GetComponent<TimedThorns>();
+        if (thorns == null) { Debug.LogWarning("Prefab 'Thorns' hat kein TimedThorns-Script."); return; }
+
+        SerializedObject so = new SerializedObject(thorns);
+        float period = so.FindProperty("activeTime").floatValue + so.FindProperty("inactiveTime").floatValue;
+        float offset = (eastward ? -column : column) * WaveStep;
+        offset = ((offset % period) + period) % period;
+        so.FindProperty("timeOffset").floatValue = offset;
+        so.ApplyModifiedProperties();
+    }
+
     static void SpawnWallTorch(Dictionary<string, GameObject> prefabs, Dictionary<string, Transform> groups, Vector3 center)
     {
         GameObject prefab = GetPrefab(prefabs, "Torch");
@@ -289,7 +312,7 @@ public static class LevelBuilder
     {
         switch (c)
         {
-            case 'D': return "Thorns";
+            case 'D': case '>': case '<': return "Thorns";
             case 'F': return "Meat";
             case 'H': return def.HintPrefab;
             case '1': case '2': case '3': case '4': return "SymbolPlate";
@@ -305,7 +328,7 @@ public static class LevelBuilder
 
     static string GroupFor(char c)
     {
-        if (c == 'D') return "Obstacles";
+        if (c == 'D' || c == '>' || c == '<') return "Obstacles";
         if (c == 'F' || c == 'H') return "Pickups";
         if (c == 'V' || c == 'G') return "Mechanics";
         if (c == 'M') return "Enemies";
