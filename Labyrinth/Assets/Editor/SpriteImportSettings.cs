@@ -1,26 +1,32 @@
 using UnityEditor;
-using UnityEngine;
 
-public class SpriteImportSettings : AssetPostprocessor
+// Stellt die neuen Dungeon-Sprites beim Import automatisch pixelgenau ein
+// (Sprite, Point, keine Kompression, 16 Pixels Per Unit).
+// Ins Verzeichnis Assets/Editor legen, BEVOR die PNGs ins Projekt kommen
+// (sonst Rechtsklick auf die PNGs -> Reimport).
+public class DungeonSpriteImport : AssetPostprocessor
 {
+    private static readonly string[] prefixes =
+    {
+        "door_open_", "key_mouth", "key_altar", "lever_", "gate_",
+        "slime_", "guard_", "dungeon_exit"
+    };
+
     void OnPreprocessTexture()
     {
         string name = System.IO.Path.GetFileNameWithoutExtension(assetPath);
-        bool isUi = name.StartsWith("ui_");
-        bool isWorld = name == "meat_mouth" || name == "hint_scroll";
-        if (!isUi && !isWorld) return;
-
-        TextureImporter importer = (TextureImporter)assetImporter;
-        importer.textureType = TextureImporterType.Sprite;
-        importer.spriteImportMode = SpriteImportMode.Single;
-        importer.filterMode = FilterMode.Point;
-        importer.textureCompression = TextureImporterCompression.Uncompressed;
-        importer.mipmapEnabled = false;
-        importer.spritePixelsPerUnit = isUi ? 25 : 16;
-        
-        if (name == "ui_panel")
+        foreach (string prefix in prefixes)
         {
-            importer.spriteBorder = new Vector4(8, 8, 8, 8);
+            if (!name.StartsWith(prefix)) continue;
+
+            TextureImporter importer = (TextureImporter)assetImporter;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 16;
+            importer.filterMode = UnityEngine.FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.mipmapEnabled = false;
+            return;
         }
     }
 }
