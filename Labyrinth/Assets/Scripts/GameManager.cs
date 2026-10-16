@@ -20,6 +20,7 @@ public class SceneItemState
 public class GameManager : MonoBehaviour
 {
     public const int TotalHints = 4;
+    public const int TotalLevers = 4;
 
     private static GameManager instance;
     public static bool HasInstance => instance != null;
@@ -50,6 +51,7 @@ public class GameManager : MonoBehaviour
     };
 
     private readonly HashSet<int> foundHints = new HashSet<int>();
+    private readonly HashSet<int> pulledLevers = new HashSet<int>();
     private readonly Dictionary<string, SceneItemState> sceneStates = new Dictionary<string, SceneItemState>();
     private float hunger;
 
@@ -70,6 +72,12 @@ public class GameManager : MonoBehaviour
     public float SpeedMultiplier => hunger <= 0f ? starvedSpeedFactor : 1f;
     public int FoundHintCount => foundHints.Count;
     public int LastHintId { get; private set; } = -1;
+
+    // Hebel (Level 2): Zustand bleibt nach einem Tod erhalten
+    public int PulledLeverCount => pulledLevers.Count;
+    public bool GateOpen => pulledLevers.Count >= TotalLevers;
+    public bool IsLeverPulled(int id) { return pulledLevers.Contains(id); }
+    public void PullLever(int id) { pulledLevers.Add(id); }
 
     void Awake()
     {
@@ -155,6 +163,7 @@ public class GameManager : MonoBehaviour
     public void ResetGame()
     {
         foundHints.Clear();
+        pulledLevers.Clear();
         sceneStates.Clear();
         LastHintId = -1;
         HeldItem = Item.None;
