@@ -10266,7 +10266,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
   target: {fileID: 0}
-  smoothSpeed: 8
+  smoothTime: 0.1
 --- !u!1 &525889837
 GameObject:
   m_ObjectHideFlags: 0
@@ -13395,6 +13395,7 @@ GameObject:
   m_Component:
   - component: {fileID: 909944499}
   - component: {fileID: 909944498}
+  - component: {fileID: 909944500}
   m_Layer: 0
   m_Name: LevelLighting
   m_TagString: Untagged
@@ -13431,6 +13432,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 383483517}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &909944500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 909944497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4301ed43357a31e42aa5cabcf31a9e95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightCulling
+  activeDistance: 12
+  checkInterval: 0.2
 --- !u!1001 &935343391
 PrefabInstance:
   m_ObjectHideFlags: 0
