@@ -162,6 +162,7 @@ public static class LevelBuilder
         Dictionary<string, GameObject> prefabs = new Dictionary<string, GameObject>();
         prefabs["Thorns"] = thornPrefab;
         int hintCount = 0;
+        int leverCount = 0;
         Random.InitState(7);
 
         int height = def.Layout.Length;
@@ -209,6 +210,10 @@ public static class LevelBuilder
                 else if (c == '>' || c == '<')
                 {
                     SetWaveOffset(obj, col, c == '>');
+                }
+                else if (c == 'V')
+                {
+                    SetLeverId(obj, leverCount++);
                 }
             }
         }
@@ -284,6 +289,16 @@ public static class LevelBuilder
         SerializedProperty prop = so.FindProperty("dungeonSpawn");
         if (prop == null) { Debug.LogWarning("PlayerSpawn hat kein Feld 'dungeonSpawn' (neues PlayerSpawn.cs eingespielt?)."); return; }
         prop.objectReferenceValue = spawn.transform;
+        so.ApplyModifiedProperties();
+    }
+
+    static void SetLeverId(GameObject lever, int id)
+    {
+        Lever script = lever.GetComponent<Lever>();
+        if (script == null) { Debug.LogWarning("Prefab 'Lever' hat kein Lever-Script."); return; }
+
+        SerializedObject so = new SerializedObject(script);
+        so.FindProperty("leverId").intValue = id;
         so.ApplyModifiedProperties();
     }
 
