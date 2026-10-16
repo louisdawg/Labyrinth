@@ -20,6 +20,9 @@ public class HUD : MonoBehaviour
     [SerializeField] private GameObject notesPanel;
     [SerializeField] private TMP_Text notesText;
 
+    [Header("Hebel (nur Level 2, sonst leer lassen)")]
+    [SerializeField] private TMP_Text leverCounterText;
+
     [Header("Tasten-Legende")]
     [SerializeField] private TMP_Text legendText;
 
@@ -51,6 +54,10 @@ public class HUD : MonoBehaviour
 
         UpdateHunger(gm);
         hintCounterText.text = gm.FoundHintCount + " / " + GameManager.TotalHints;
+        if (leverCounterText != null)
+        {
+            leverCounterText.text = gm.PulledLeverCount + " / " + GameManager.TotalLevers;
+        }
         UpdateItemSlot(gm.HeldItem);
 
         if (gm.FoundHintCount > lastHintCount)
