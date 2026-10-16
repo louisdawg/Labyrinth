@@ -151,3 +151,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21a045a2d1bccc446a2039c750bbb997, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Door
+  openFrames:
+  - {fileID: 21300000, guid: 9b3a69933a21f666da7aca3ed357d18f, type: 3}
+  - {fileID: 21300000, guid: cea8a1476c47efa6bb729ece6c31e4ff, type: 3}
+  - {fileID: 21300000, guid: 92ba3af5f5cb266c79d811360127e4ce, type: 3}
+  framesPerSecond: 8
+  fadeSeconds: 0.4
