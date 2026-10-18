@@ -47,11 +47,17 @@ public class GameManager : MonoBehaviour
         "Der Mond erwacht vor dem Stern.",
         "Der Stern verblasst, bevor die Sonne aufgeht.",
         "Das Auge öffnet sich zuletzt.",
-        "Die Sonne kommt direkt vor dem Auge."
+        "Die Sonne kommt direkt vor dem Auge.",
+        // Ab ID 4: Slime-Warnhinweise in Level 2 (Platzhalter, Texte später anpassen)
+        "Nicht alles, was sich bewegt, ist Futter.",
+        "Die Schleime gehören zum Dungeon.",
+        "Wer seine Kinder frisst, geht nie wieder hinaus."
     };
 
     private readonly HashSet<int> foundHints = new HashSet<int>();
     private readonly HashSet<int> pulledLevers = new HashSet<int>();
+    private readonly HashSet<string> eatenSlimes = new HashSet<string>();
+    private int mainHintCount;
     private readonly Dictionary<string, SceneItemState> sceneStates = new Dictionary<string, SceneItemState>();
     private float hunger;
 
@@ -70,8 +76,15 @@ public class GameManager : MonoBehaviour
     public float Hunger => hunger;
     public float MaxHunger => maxHunger;
     public float SpeedMultiplier => hunger <= 0f ? starvedSpeedFactor : 1f;
-    public int FoundHintCount => foundHints.Count;
+    // Zähler "n / 4" im HUD: nur die Rätsel-Hinweise (IDs unter TotalHints), Slime-Hinweise zählen nicht mit
+    public int FoundHintCount => mainHintCount;
     public int LastHintId { get; private set; } = -1;
+    // Zählt jeden neuen Hinweis (auch ab ID 4). Das HUD öffnet damit das Popup.
+    public int HintEventCount { get; private set; }
+
+    // Gefressene Slimes bleiben nach einem Tod gefressen (Schlüssel = Szene + Startposition, siehe Slime.cs)
+    public int SlimesEaten => eatenSlimes.Count;
+    public bool IsSlimeEaten(string key) { return eatenSlimes.Contains(key); }
 
     // Hebel (Level 2): Zustand bleibt nach einem Tod erhalten
     public int PulledLeverCount => pulledLevers.Count;
@@ -119,6 +132,8 @@ public class GameManager : MonoBehaviour
         if (foundHints.Add(id))
         {
             LastHintId = id;
+            HintEventCount++;
+            if (id < TotalHints) mainHintCount++;
         }
     }
 
@@ -136,6 +151,13 @@ public class GameManager : MonoBehaviour
     public void Eat()
     {
         hunger = Mathf.Min(maxHunger, hunger + meatRestore);
+    }
+
+    // Slime gefressen: Hunger voll, Slime merken (Bad Ending im Level 3)
+    public void EatSlime(string key)
+    {
+        eatenSlimes.Add(key);
+        hunger = maxHunger;
     }
 
     public void LoseHunger(float amount)
@@ -166,7 +188,10 @@ public class GameManager : MonoBehaviour
     public void ResetGame()
     {
         foundHints.Clear();
+        mainHintCount = 0;
+        HintEventCount = 0;
         pulledLevers.Clear();
+        eatenSlimes.Clear();
         sceneStates.Clear();
         LastHintId = -1;
         HeldItem = Item.None;
