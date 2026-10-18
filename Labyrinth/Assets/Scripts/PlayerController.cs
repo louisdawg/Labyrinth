@@ -14,6 +14,13 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // Cutscene, Menü usw.: Spieler bleibt stehen
+        if (GameManager.Instance.State != GameState.Playing)
+        {
+            moveInput = Vector2.zero;
+            return;
+        }
+
         float xInput = Input.GetAxis("Horizontal");
         float yInput = Input.GetAxis("Vertical");
 
