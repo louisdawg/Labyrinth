@@ -13,7 +13,8 @@ public static class LevelBuilder
     // D  Dornen-Falle    F  Fleisch                   H  Hinweis
     // 1-4 Symbol-Platten K  Schlüssel-Altar          T  Tür
     // P  Respawn hinter der Tür (Objekt "DungeonSpawn", wird automatisch angelegt und verknüpft)
-    // V  Hebel (Prefab "Lever")   G  Tor (Prefab "Gate")   M  Slime (Prefab "Slime")   W  Wärter (Prefab "Guard")
+    // V  Hebel (Prefab "Lever")   G  Tor (Prefab "Gate")   W  Wärter (Prefab "Guard")
+    // M  Slime, patrouilliert links/rechts   N  Slime, patrouilliert hoch/runter (beide Prefab "Slime")
     // L  Wand mit Fackel (Wandtile + Prefab "Torch")
     // >  Dornen-Welle nach Osten, <  Dornen-Welle nach Westen (Prefab "Thorns", Phase nach Spalte, siehe WaveStep)
     // Fehlende Prefabs werden einmal gewarnt und übersprungen.
@@ -58,8 +59,8 @@ public static class LevelBuilder
         "################.<<<<<<<.####.<<<<<<<<.##.........#",
         "################.#L####L.####.##L##L##H.....L.#...#",
         "################.>>>>>>>.####.>>>>>>>>.##.........L",
-        "################.############.########L##...M.....#",
-        "################..F...F..####..F....F..##F.F...F.F#",
+        "################.############.########L##.........#",
+        "################..F...F..####..F....F..##F.F.M.F.F#",
         "####################.###########.###########L######",
         "####################.########L##.##################",
         "################L##L.L##L####...M..################",
@@ -67,14 +68,14 @@ public static class LevelBuilder
         "L....#H#....###.F...F...F.###..M...######.........#",
         "#....LD#...F###...............#..#.######.F.....F.#",
         "#.1.......2.###...#...L...###.F..F.######...L.....#",
-        "#...#...L...L#L...........#L#####L######L.........L",
+        "#...#...L...L#L.....N.....#L#####L######L.........L",
         "#XS...K...F.TP.............G......F..............Z#",
         "#...L...#...L#L...........#L############L.........#",
         "L.3.......4.###...L...L...###......######...L.....#",
         "#...........###...............#..#.######.F.....F.#",
         "#..F..F.....###.F...F...F.L##..D..D######.........#",
         "#######L#######...........###.#..#.########L###L###",
-        "###############L###L.L#######F....F################",
+        "###############L###L.L#######F..M.F################",
         "####################.###########.##################",
         "####################.###########.###########L##L###",
         "################..F...F..####..F....F..##.........#",
@@ -82,7 +83,7 @@ public static class LevelBuilder
         "################.<<<<<<<.###L.<<<<<<<<.##...L.#...#",
         "################.#L#####.####H#######L........D...L",
         "################.>>>>>>>.####.>>>>>>>>.##.F.....F.#",
-        "################V############V###########...F.F...#",
+        "################V############V###########...FMF...#",
         "###########################################L##L####",
         "###################################################",
     };
@@ -218,6 +219,10 @@ public static class LevelBuilder
                 {
                     SetLeverId(obj, leverCount++);
                 }
+                else if (c == 'M' || c == 'N')
+                {
+                    SetSlimeAxis(obj, c == 'N');
+                }
             }
         }
 
@@ -295,6 +300,16 @@ public static class LevelBuilder
         so.ApplyModifiedProperties();
     }
 
+    static void SetSlimeAxis(GameObject slime, bool vertical)
+    {
+        Slime script = slime.GetComponent<Slime>();
+        if (script == null) { Debug.LogWarning("Prefab 'Slime' hat kein Slime-Script."); return; }
+
+        SerializedObject so = new SerializedObject(script);
+        so.FindProperty("vertical").boolValue = vertical;
+        so.ApplyModifiedProperties();
+    }
+
     static void SetLeverId(GameObject lever, int id)
     {
         Lever script = lever.GetComponent<Lever>();
@@ -340,7 +355,7 @@ public static class LevelBuilder
             case 'T': return "Door";
             case 'V': return "Lever";
             case 'G': return "Gate";
-            case 'M': return "Slime";
+            case 'M': case 'N': return "Slime";
             case 'W': return "Guard";
             default: return null;
         }
@@ -351,7 +366,7 @@ public static class LevelBuilder
         if (c == 'D' || c == '>' || c == '<') return "Obstacles";
         if (c == 'F' || c == 'H') return "Pickups";
         if (c == 'V' || c == 'G') return "Mechanics";
-        if (c == 'M') return "Enemies";
+        if (c == 'M' || c == 'N') return "Enemies";
         if (c == 'W') return "NPCs";
         return "Puzzle";
     }
