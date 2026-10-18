@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 //
 // Prefab: SpriteRenderer, Rigidbody2D (Body Type Kinematic), Circle Collider 2D (KEIN Trigger), dieses Script.
 // Keine Wegsuche: Der Slime sieht Fleisch nur mit freier Sichtlinie (keine Wand dazwischen).
+// Er reagiert nur auf Fleisch, das der Spieler mit E abgelegt hat (nicht auf Fleisch aus dem Layout oder zufällig gespawntes).
 [RequireComponent(typeof(Rigidbody2D))]
 public class Slime : MonoBehaviour
 {
@@ -24,6 +25,7 @@ public class Slime : MonoBehaviour
     [SerializeField] private float patrolRange = 3f;    // so weit läuft er von seinem Startpunkt weg (je Seite)
     [SerializeField] private float sightRange = 4f;     // so weit sieht er Fleisch
     [SerializeField] private float eatSeconds = 3f;
+    [SerializeField] private bool vertical;             // false = links/rechts, true = hoch/runter (setzt der LevelBuilder: M / N)
 
     private Rigidbody2D rb;
     private Collider2D col;
@@ -76,10 +78,7 @@ public class Slime : MonoBehaviour
         radius = col.bounds.extents.x;
         home = rb.position;
 
-        // Patrouille entlang der Achse mit mehr freiem Platz
-        float horizontal = FreeDistance(Vector2.left, patrolRange) + FreeDistance(Vector2.right, patrolRange);
-        float vertical = FreeDistance(Vector2.down, patrolRange) + FreeDistance(Vector2.up, patrolRange);
-        axis = horizontal >= vertical ? Vector2.right : Vector2.up;
+        axis = vertical ? Vector2.up : Vector2.right;
 
         sightTimer = Random.value * 0.25f;
     }
@@ -146,6 +145,7 @@ public class Slime : MonoBehaviour
         {
             ItemPickup pickup = c.GetComponent<ItemPickup>();
             if (pickup == null || pickup.item != Item.Fleisch) continue;
+            if (pickup.record == null || !pickup.record.byPlayer) continue;   // nur Fleisch, das der Spieler abgelegt hat
 
             Vector2 pos = pickup.transform.position;
             float distance = Vector2.Distance(rb.position, pos);
