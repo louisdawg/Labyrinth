@@ -22,6 +22,7 @@ public class HUD : MonoBehaviour
 
     [Header("Hebel (nur Level 2, sonst leer lassen)")]
     [SerializeField] private TMP_Text leverCounterText;
+    [SerializeField] private string gateReadyText = "Alle Hebel sind umgelegt.\nDas Tor wartet.";
 
     [Header("Tasten-Legende")]
     [SerializeField] private TMP_Text legendText;
@@ -36,6 +37,7 @@ public class HUD : MonoBehaviour
 
     private int lastLegendMask = -1;
     private int lastHintCount;
+    private bool lastAllLevers;
     private string fullHintText = "";
     private float typedCharacters;
     private bool typing;
@@ -44,6 +46,7 @@ public class HUD : MonoBehaviour
     void Start()
     {
         lastHintCount = GameManager.Instance.FoundHintCount;
+        lastAllLevers = GameManager.Instance.AllLeversPulled;
         hintPopupPanel.SetActive(false);
         notesPanel.SetActive(false);
     }
@@ -65,6 +68,13 @@ public class HUD : MonoBehaviour
             OpenHintPopup(gm.GetHintText(gm.LastHintId));
         }
         lastHintCount = gm.FoundHintCount;
+
+        // Letzter Hebel gerade umgelegt (nur Level 2): Hinweis, dass man zum Tor zurück soll
+        if (leverCounterText != null && gm.AllLeversPulled && !lastAllLevers && !gm.GateOpened)
+        {
+            OpenHintPopup(gateReadyText);
+        }
+        lastAllLevers = gm.AllLeversPulled;
 
         if (hintPopupPanel.activeSelf)
         {
