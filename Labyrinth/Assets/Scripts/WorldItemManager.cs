@@ -74,9 +74,9 @@ public class WorldItemManager : MonoBehaviour
         TrySpawnRandomMeat();
     }
 
-    public void DropItem(Item item, Vector2 position)
+    public void DropItem(Item item, Vector2 position, bool byPlayer = false)
     {
-        ItemRecord record = new ItemRecord { item = item, position = position };
+        ItemRecord record = new ItemRecord { item = item, position = position, byPlayer = byPlayer };
         state.items.Add(record);
         SpawnObject(record);
     }
