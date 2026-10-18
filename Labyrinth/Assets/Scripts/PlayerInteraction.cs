@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// E = aufheben / droppen, F = Fleisch essen
+// E = aufheben / droppen, F = Fleisch essen (oder einen fressenden Slime)
 // Zeigt ein kleines [E]-Symbol über dem nächsten Item in Reichweite.
 public class PlayerInteraction : MonoBehaviour
 {
@@ -38,6 +38,14 @@ public class PlayerInteraction : MonoBehaviour
         if (GameManager.Instance.HeldItem != Item.None)
         {
             InteractPrompt.Hide();
+            return;
+        }
+
+        // Ein Slime, der gerade frisst, kann mit F gefressen werden
+        Slime eatable = FindNearestEatableSlime();
+        if (eatable != null)
+        {
+            InteractPrompt.Show(eatable.transform.position, "[F]");
             return;
         }
 
@@ -107,6 +115,15 @@ public class PlayerInteraction : MonoBehaviour
 
         if (gm.HeldItem != Item.None) return;
 
+        // Mund leer: erst ein fressender Slime in Reichweite, dann Fleisch am Boden
+        Slime slime = FindNearestEatableSlime();
+        if (slime != null)
+        {
+            slime.GetEaten();
+            gm.UsedEat = true;
+            return;
+        }
+
         WorldItemManager world = WorldItemManager.Instance;
         ItemPickup nearest = FindNearestPickup();
         if (world is not null && nearest is not null && nearest.item == Item.Fleisch)
@@ -133,6 +150,27 @@ public class PlayerInteraction : MonoBehaviour
             {
                 bestDistance = distance;
                 best = candidate;
+            }
+        }
+        return best;
+    }
+
+    private Slime FindNearestEatableSlime()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickupRange);
+        Slime best = null;
+        float bestDistance = float.MaxValue;
+
+        foreach (Collider2D hit in hits)
+        {
+            Slime slime = hit.GetComponent<Slime>();
+            if (slime == null || !slime.CanBeEaten) continue;
+
+            float distance = Vector2.Distance(transform.position, hit.transform.position);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = slime;
             }
         }
         return best;
