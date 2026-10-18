@@ -87,7 +87,7 @@ public class PlayerInteraction : MonoBehaviour
 
         if (gm.HeldItem != Item.None)
         {
-            world.DropItem(gm.HeldItem, transform.position);
+            world.DropItem(gm.HeldItem, transform.position, true);
             gm.HeldItem = Item.None;
             gm.UsedInteract = true;
             return;
