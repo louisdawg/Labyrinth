@@ -82,7 +82,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 11e24efcd82194c5bb898d58f2048f0f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -181,3 +181,4 @@ MonoBehaviour:
   patrolRange: 3
   sightRange: 4
   eatSeconds: 3
+  vertical: 0
