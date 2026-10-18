@@ -9,6 +9,7 @@ public class ItemRecord
 {
     public Item item;
     public Vector2 position;
+    public bool byPlayer;   // vom Spieler abgelegt (nur dieses Fleisch lockt Slimes an)
 }
 
 public class SceneItemState
