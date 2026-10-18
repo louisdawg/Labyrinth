@@ -48,9 +48,10 @@ public class GameManager : MonoBehaviour
         "Der Stern verblasst, bevor die Sonne aufgeht.",
         "Das Auge öffnet sich zuletzt.",
         "Die Sonne kommt direkt vor dem Auge.",
-        // Ab ID 4: Slime-Warnhinweise in Level 2 (Platzhalter, Texte später anpassen)
-        "Nicht alles, was sich bewegt, ist Futter.",
+        // Ab ID 4: Slime-Warnhinweise in Level 2, IDs in Leserichtung des Layouts:
+        // 4 = Kammer C2 (NO-Flügel), 5 = Nische im Rätselraum (vage), 6 = Kammer D2 (SO-Flügel, am deutlichsten)
         "Die Schleime gehören zum Dungeon.",
+        "Nicht alles, was sich bewegt, ist Futter.",
         "Wer seine Kinder frisst, geht nie wieder hinaus."
     };
 
