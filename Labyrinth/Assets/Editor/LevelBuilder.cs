@@ -30,7 +30,7 @@ public static class LevelBuilder
         public string[] FloorTiles;
         public string[] WallTiles;
         public string HintPrefab;
-        public bool NumberHints;
+        public int HintIdStart;   // erste Hinweis-ID des Levels (Level 1: 0, Level 2: 4), IDs in Leserichtung
     }
 
     static readonly string[] Level1Layout =
@@ -56,7 +56,7 @@ public static class LevelBuilder
         "######################################L######L#####",
         "########################V#############V##.........#",
         "################.<<<<<<<.####.<<<<<<<<.##.........#",
-        "################.#L####L.####.##L##L##......L.#...#",
+        "################.#L####L.####.##L##L##H.....L.#...#",
         "################.>>>>>>>.####.>>>>>>>>.##.........L",
         "################.############.########L##...M.....#",
         "################..F...F..####..F....F..##F.F...F.F#",
@@ -68,7 +68,7 @@ public static class LevelBuilder
         "#....LD#...F###...............#..#.######.F.....F.#",
         "#.1.......2.###...#...L...###.F..F.######...L.....#",
         "#...#...L...L#L...........#L#####L######L.........L",
-        "#XS...K...F.TP.............G......F...........W..Z#",
+        "#XS...K...F.TP.............G......F..............Z#",
         "#...L...#...L#L...........#L############L.........#",
         "L.3.......4.###...L...L...###......######...L.....#",
         "#...........###...............#..#.######.F.....F.#",
@@ -80,7 +80,7 @@ public static class LevelBuilder
         "################..F...F..####..F....F..##.........#",
         "#######################L.#######L#####.##.D.....D.#",
         "################.<<<<<<<.###L.<<<<<<<<.##...L.#...#",
-        "################.#L#####.####.#######L........D...L",
+        "################.#L#####.####H#######L........D...L",
         "################.>>>>>>>.####.>>>>>>>>.##.F.....F.#",
         "################V############V###########...F.F...#",
         "###########################################L##L####",
@@ -109,7 +109,7 @@ public static class LevelBuilder
                     FloorTiles = new[] { "floor_jungle_a", "floor_jungle_b", "floor_jungle_c" },
                     WallTiles = new[] { "wall_jungle_a", "wall_jungle_b" },
                     HintPrefab = "Hint",
-                    NumberHints = true
+                    HintIdStart = 0
                 };
             case "Level2":
                 return new LevelDef
@@ -117,8 +117,8 @@ public static class LevelBuilder
                     Layout = Level2Layout,
                     FloorTiles = new[] { "floor_dungeon_a", "floor_dungeon_b" },
                     WallTiles = new[] { "wall_dungeon_a", "wall_dungeon_b" },
-                    HintPrefab = "FallbackHint",
-                    NumberHints = false
+                    HintPrefab = "Hint",
+                    HintIdStart = 4
                 };
             default:
                 return null;
@@ -202,7 +202,7 @@ public static class LevelBuilder
                 GameObject obj = Spawn(prefab, GetGroup(groups, GroupFor(c)), center);
                 if (c == 'H')
                 {
-                    if (def.NumberHints) SetHintId(obj, hintCount);
+                    SetHintId(obj, def.HintIdStart + hintCount);
                     hintCount++;
                 }
                 else if (c >= '1' && c <= '4')
