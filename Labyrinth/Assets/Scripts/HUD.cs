@@ -36,7 +36,7 @@ public class HUD : MonoBehaviour
     private static readonly Color red = new Color32(216, 64, 58, 255);
 
     private int lastLegendMask = -1;
-    private int lastHintCount;
+    private int lastHintEvent;
     private bool lastAllLevers;
     private string fullHintText = "";
     private float typedCharacters;
@@ -45,7 +45,7 @@ public class HUD : MonoBehaviour
 
     void Start()
     {
-        lastHintCount = GameManager.Instance.FoundHintCount;
+        lastHintEvent = GameManager.Instance.HintEventCount;
         lastAllLevers = GameManager.Instance.AllLeversPulled;
         hintPopupPanel.SetActive(false);
         notesPanel.SetActive(false);
@@ -63,11 +63,12 @@ public class HUD : MonoBehaviour
         }
         UpdateItemSlot(gm.HeldItem);
 
-        if (gm.FoundHintCount > lastHintCount)
+        // Auch Hinweise ab ID 4 (Slime-Warnungen) öffnen das Popup
+        if (gm.HintEventCount > lastHintEvent)
         {
             OpenHintPopup(gm.GetHintText(gm.LastHintId));
         }
-        lastHintCount = gm.FoundHintCount;
+        lastHintEvent = gm.HintEventCount;
 
         // Letzter Hebel gerade umgelegt (nur Level 2): Hinweis, dass man zum Tor zurück soll
         if (leverCounterText != null && gm.AllLeversPulled && !lastAllLevers && !gm.GateOpened)
