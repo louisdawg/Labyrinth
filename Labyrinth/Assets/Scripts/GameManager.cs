@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public enum GameState { Menu, Playing, Paused, GameOver }
+public enum GameState { Menu, Playing, Paused, GameOver, Cutscene }
 
 public class ItemRecord
 {
@@ -75,7 +75,10 @@ public class GameManager : MonoBehaviour
 
     // Hebel (Level 2): Zustand bleibt nach einem Tod erhalten
     public int PulledLeverCount => pulledLevers.Count;
-    public bool GateOpen => pulledLevers.Count >= TotalLevers;
+    public bool AllLeversPulled => pulledLevers.Count >= TotalLevers;
+
+    // Level 2: Die Tor-Cutscene wurde gesehen, das Tor bleibt offen (auch nach einem Tod)
+    public bool GateOpened { get; set; }
     public bool IsLeverPulled(int id) { return pulledLevers.Contains(id); }
     public void PullLever(int id) { pulledLevers.Add(id); }
 
@@ -172,6 +175,7 @@ public class GameManager : MonoBehaviour
         UsedNotes = false;
         PuzzleSolved = false;
         DoorOpened = false;
+        GateOpened = false;
         hunger = maxHunger;
         SetState(GameState.Playing);
     }
