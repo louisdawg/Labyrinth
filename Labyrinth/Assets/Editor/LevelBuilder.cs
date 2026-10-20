@@ -15,6 +15,7 @@ public static class LevelBuilder
     // P  Respawn hinter der Tür (Objekt "DungeonSpawn", wird automatisch angelegt und verknüpft)
     // V  Hebel (Prefab "Lever")   G  Tor (Prefab "Gate")   W  Wärter (Prefab "Guard")
     // M  Slime, patrouilliert links/rechts   N  Slime, patrouilliert hoch/runter (beide Prefab "Slime")
+    // B  Großes Tor (Prefab "BigGate", Level 3)
     // L  Wand mit Fackel (Wandtile + Prefab "Torch")
     // >  Dornen-Welle nach Osten, <  Dornen-Welle nach Westen (Prefab "Thorns", Phase nach Spalte, siehe WaveStep)
     // Fehlende Prefabs werden einmal gewarnt und übersprungen.
@@ -88,6 +89,58 @@ public static class LevelBuilder
         "###################################################",
     };
 
+    // Level 3: vertikaler Weg von unten (Start) nach oben, Wächter W in der Halle, großes Tor B, Ziel Z dahinter
+    static readonly string[] Level3Layout =
+    {
+        "#####################",
+        "##########Z##########",
+        "##########.##########",
+        "#########L.##########",
+        "##########B##########",
+        "##########.####L#####",
+        "####L...........#####",
+        "#####...........#####",
+        "#####.....W.....#####",
+        "#####...........#####",
+        "#####...........L####",
+        "#####...........#####",
+        "#####.F.......F.#####",
+        "##########.L#########",
+        "##########.##########",
+        "##########D##########",
+        "######L###.##L#######",
+        "######.........######",
+        "######.F..D..F.######",
+        "######..L...#..L#####",
+        "####F............####",
+        "####...D.....D..F####",
+        "######..#...#..######",
+        "######....D....######",
+        "######.F.....F.######",
+        "##########.#L########",
+        "##########.##########",
+        "##########D##########",
+        "#######L##.###L######",
+        "######.........######",
+        "######.........######",
+        "######.F.....F.######",
+        "#####L.........######",
+        "######....S....L#####",
+        "######.........######",
+        "#######L#############",
+        "#####################",
+    };
+
+    // Level 4 (Platzhalter): kurzer, friedlicher Weg, keine Fallen
+    static readonly string[] Level4Layout =
+    {
+        "###############",
+        "#S............#",
+        "#############.#",
+        "#Z............#",
+        "###############",
+    };
+
     // Ordnung in der Hierarchy: erster Eintrag = Gruppe, danach ihre Kinder (nach Namen gesucht).
     // Fehlende Objekte werden uebersprungen, leere Gruppen nicht angelegt.
     static readonly string[][] HierarchyPlan =
@@ -121,6 +174,24 @@ public static class LevelBuilder
                     HintPrefab = "Hint",
                     HintIdStart = 4
                 };
+            case "Level3":
+                return new LevelDef
+                {
+                    Layout = Level3Layout,
+                    FloorTiles = new[] { "floor_dungeon_a", "floor_dungeon_b" },
+                    WallTiles = new[] { "wall_dungeon_a", "wall_dungeon_b" },
+                    HintPrefab = "Hint",
+                    HintIdStart = 7
+                };
+            case "Level4":
+                return new LevelDef
+                {
+                    Layout = Level4Layout,
+                    FloorTiles = new[] { "floor_jungle_a", "floor_jungle_b", "floor_jungle_c" },   // Platzhalter, später Gras/Erde
+                    WallTiles = new[] { "wall_jungle_a", "wall_jungle_b" },
+                    HintPrefab = "Hint",
+                    HintIdStart = 7
+                };
             default:
                 return null;
         }
@@ -133,7 +204,7 @@ public static class LevelBuilder
         LevelDef def = GetDef(sceneName);
         if (def == null)
         {
-            Debug.LogError("Keine Level-Definition fuer Szene '" + sceneName + "'. Bekannt: Level1, Level2.");
+            Debug.LogError("Keine Level-Definition fuer Szene '" + sceneName + "'. Bekannt: Level1 bis Level4.");
             return;
         }
 
@@ -355,6 +426,7 @@ public static class LevelBuilder
             case 'T': return "Door";
             case 'V': return "Lever";
             case 'G': return "Gate";
+            case 'B': return "BigGate";
             case 'M': case 'N': return "Slime";
             case 'W': return "Guard";
             default: return null;
@@ -365,7 +437,7 @@ public static class LevelBuilder
     {
         if (c == 'D' || c == '>' || c == '<') return "Obstacles";
         if (c == 'F' || c == 'H') return "Pickups";
-        if (c == 'V' || c == 'G') return "Mechanics";
+        if (c == 'V' || c == 'G' || c == 'B') return "Mechanics";
         if (c == 'M' || c == 'N') return "Enemies";
         if (c == 'W') return "NPCs";
         return "Puzzle";

@@ -94,6 +94,9 @@ public class GameManager : MonoBehaviour
 
     // Level 2: Die Tor-Cutscene wurde gesehen, das Tor bleibt offen (auch nach einem Tod)
     public bool GateOpened { get; set; }
+
+    // Level 3: Der Wächter hat das große Tor geöffnet (bleibt auch nach einem Neustart der Szene offen)
+    public bool BigGateOpened { get; set; }
     public bool IsLeverPulled(int id) { return pulledLevers.Contains(id); }
     public void PullLever(int id) { pulledLevers.Add(id); }
 
@@ -203,6 +206,7 @@ public class GameManager : MonoBehaviour
         PuzzleSolved = false;
         DoorOpened = false;
         GateOpened = false;
+        BigGateOpened = false;
         hunger = maxHunger;
         SetState(GameState.Playing);
     }
