@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 // Dialogfenster am unteren Bildschirmrand. Baut sich selbst auf, in der Szene muss nichts eingerichtet werden.
 // Benutzen (innerhalb einer Coroutine, mit StartCoroutine):
-//   yield return StartCoroutine(DialogueBox.Say("Text"));      // Schreibmaschine, Leertaste/Enter/E = weiter
+//   yield return StartCoroutine(DialogueBox.Say("Text"));      // Schreibmaschine (nicht überspringbar), danach Leertaste/Enter/E = weiter
 //   yield return StartCoroutine(DialogueBox.Ask("Frage?", new[] { "Ja", "Nein" }, i => choice = i));
 //   DialogueBox.Close();
 // Auswahl: A/D oder Pfeiltasten, bestätigen mit Leertaste/Enter/E.
@@ -52,11 +52,13 @@ public class DialogueBox : MonoBehaviour
         panel = new GameObject("Panel", typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(transform, false);
 
+        // Breite = 80 % des Bildschirms (passt sich jedem Seitenverhältnis an), Höhe fest, unten mittig
         RectTransform rt = panel.GetComponent<RectTransform>();
-        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+        rt.anchorMin = new Vector2(0.1f, 0f);
+        rt.anchorMax = new Vector2(0.9f, 0f);
         rt.pivot = new Vector2(0.5f, 0f);
-        rt.sizeDelta = new Vector2(1500f, 320f);
-        rt.anchoredPosition = new Vector2(0f, 60f);
+        rt.sizeDelta = new Vector2(0f, 320f);
+        rt.anchoredPosition = new Vector2(0f, 50f);
 
         Image image = panel.GetComponent<Image>();
         image.color = panelColor;
@@ -66,12 +68,19 @@ public class DialogueBox : MonoBehaviour
         outline.effectColor = borderColor;
         outline.effectDistance = new Vector2(4f, -4f);
 
+        // Text füllt das Fenster mit Rand. Umbruch an, Schrift verkleinert sich bei langen Sätzen selbst,
+        // damit nie etwas aus dem Fenster läuft.
         label = CreateText("Text", 46f, TextAlignmentOptions.TopLeft);
+        label.textWrappingMode = TextWrappingModes.Normal;
+        label.overflowMode = TextOverflowModes.Truncate;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 24f;
+        label.fontSizeMax = 46f;
         RectTransform labelRect = label.rectTransform;
         labelRect.anchorMin = Vector2.zero;
         labelRect.anchorMax = Vector2.one;
-        labelRect.offsetMin = new Vector2(60f, 70f);
-        labelRect.offsetMax = new Vector2(-60f, -40f);
+        labelRect.offsetMin = new Vector2(50f, 75f);
+        labelRect.offsetMax = new Vector2(-50f, -35f);
 
         hint = CreateText("Hint", 30f, TextAlignmentOptions.BottomRight);
         hint.color = new Color32(180, 180, 190, 255);
@@ -109,8 +118,7 @@ public class DialogueBox : MonoBehaviour
         float typed = 0f;
         while (typed < text.Length)
         {
-            typed += CharactersPerSecond * Time.deltaTime;
-            if (ConfirmPressed()) typed = text.Length;   // Drücken = Rest sofort anzeigen
+            typed += CharactersPerSecond * Time.deltaTime;   // Buchstabe für Buchstabe, nicht überspringbar
             box.label.maxVisibleCharacters = Mathf.FloorToInt(typed);
             yield return null;
         }
