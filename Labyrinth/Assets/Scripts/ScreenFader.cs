@@ -55,6 +55,20 @@ public class ScreenFader : MonoBehaviour
         StartCoroutine(Routine(buildIndex));
     }
 
+    // Für Szenen, die man nur beim Namen kennt (z.B. LoseScreen)
+    public void FadeAndLoad(string sceneName)
+    {
+        StartCoroutine(Routine(sceneName));
+    }
+
+    IEnumerator Routine(string sceneName)
+    {
+        yield return Fade(1f);
+        SceneManager.LoadScene(sceneName);
+        yield return null;
+        yield return Fade(0f);
+    }
+
     IEnumerator Routine(int buildIndex)
     {
         yield return Fade(1f);
