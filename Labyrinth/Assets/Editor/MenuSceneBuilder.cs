@@ -44,7 +44,7 @@ public static class MenuSceneBuilder
             new[] { ("Spiel starten", ButtonAction.Start), ("Beenden", ButtonAction.Quit) });
 
         CreateScene(winPath, "Du hast gewonnen!",
-            "Du bist entkommen. Der Dungeon vergisst dich nicht.",
+            "Du bist entkommen. Der Dungeon vergisst dich nicht.\n\nTo be continued...",
             new[] { ("Nochmal spielen", ButtonAction.Start) });
 
         CreateLoseScene(losePath);
