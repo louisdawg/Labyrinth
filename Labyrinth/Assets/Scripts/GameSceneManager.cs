@@ -8,6 +8,7 @@ public class GameSceneManager : MonoBehaviour
     public const string StartMenuScene = "StartMenu";
     public const string FirstLevelScene = "Level1";
     public const string WinScene = "WinScreen";
+    public const string LoseScene = "LoseScreen";
 
     private static GameSceneManager instance;
     public static GameSceneManager Instance
@@ -68,6 +69,13 @@ public class GameSceneManager : MonoBehaviour
     public void LoadStartMenu() { LoadScene(StartMenuScene); }
 
     public void LoadWinScreen() { LoadScene(WinScene); }
+
+    // Mit Ausblenden (Wächter-Ending)
+    public void LoadLoseScreen()
+    {
+        Time.timeScale = 1f;
+        ScreenFader.Instance.FadeAndLoad(LoseScene);
+    }
 
     // Neues Spiel: alles zurücksetzen, dann Level 1
     public void StartNewGame()
