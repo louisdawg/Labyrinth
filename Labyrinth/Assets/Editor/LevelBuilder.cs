@@ -15,6 +15,7 @@ public static class LevelBuilder
     // P  Respawn hinter der Tür (Objekt "DungeonSpawn", wird automatisch angelegt und verknüpft)
     // V  Hebel (Prefab "Lever")   G  Tor (Prefab "Gate")   W  Wärter (Prefab "Guard")
     // M  Slime, patrouilliert links/rechts   N  Slime, patrouilliert hoch/runter (beide Prefab "Slime")
+    // ,  Erdpfad (nur Level 4, Boden mit anderem Tile)
     // B  Großes Tor (Prefab "BigGate", Level 3)
     // L  Wand mit Fackel (Wandtile + Prefab "Torch")
     // >  Dornen-Welle nach Osten, <  Dornen-Welle nach Westen (Prefab "Thorns", Phase nach Spalte, siehe WaveStep)
@@ -32,6 +33,7 @@ public static class LevelBuilder
         public string[] FloorTiles;
         public string[] WallTiles;
         public string HintPrefab;
+        public string PathTile;   // Sprite für "," (Erdpfad), optional
         public int HintIdStart;   // erste Hinweis-ID des Levels (Level 1: 0, Level 2: 4), IDs in Leserichtung
     }
 
@@ -131,14 +133,36 @@ public static class LevelBuilder
         "#####################",
     };
 
-    // Level 4 (Platzhalter): kurzer, friedlicher Weg, keine Fallen
+    // Level 4: große offene Wiese mit Erdpfad (",") von S nach Z, Baumgruppen, kein Hindernis
     static readonly string[] Level4Layout =
     {
-        "###############",
-        "#S............#",
-        "#############.#",
-        "#Z............#",
-        "###############",
+        "#############################################",
+        "#############################################",
+        "##.........................................##",
+        "##......#........###.......................##",
+        "##.....###.......###.........###...........##",
+        "##....#####......###F.......#####..........##",
+        "##.....###..................#####....###...##",
+        "##......#...................#####....###...##",
+        "##.............,,,,,,,,,,....###.....###...##",
+        "##............,,,,,,,,,,,..................##",
+        "##....F......,,,.......,,,..........F......##",
+        "##...........,,.........,,........#........##",
+        "##..........,,F........#,,F......###.......##",
+        "##.S,,,,,,,,,,.........##,,.......#....,,,Z##",
+        "##.,,,,,,,,,,..........##,,...........,,,,,##",
+        "##..........#............,,,.........,,,...##",
+        "##.........###............,,.........,,....##",
+        "##..........#......#......,,,.......,,,....##",
+        "##....###.........###......,,,,,,,,,,,..#..##",
+        "##...#####.......#####.....,,,,,,,,,,..###.##",
+        "##...#####........###.........#.F.....#######",
+        "##...#####.........#.........###.......###.##",
+        "##....###...................#####.......#..##",
+        "##...........................###...........##",
+        "##............................#............##",
+        "#############################################",
+        "#############################################",
     };
 
     // Ordnung in der Hierarchy: erster Eintrag = Gruppe, danach ihre Kinder (nach Namen gesucht).
@@ -187,8 +211,9 @@ public static class LevelBuilder
                 return new LevelDef
                 {
                     Layout = Level4Layout,
-                    FloorTiles = new[] { "floor_jungle_a", "floor_jungle_b", "floor_jungle_c" },   // Platzhalter, später Gras/Erde
-                    WallTiles = new[] { "wall_jungle_a", "wall_jungle_b" },
+                    FloorTiles = new[] { "floor_grass_a", "floor_grass_b", "floor_grass_c" },
+                    WallTiles = new[] { "wall_tree_a", "wall_tree_b" },
+                    PathTile = "floor_path",
                     HintPrefab = "Hint",
                     HintIdStart = 7
                 };
@@ -213,6 +238,7 @@ public static class LevelBuilder
         if (floor == null || walls == null) return;
 
         Tile[] floorTiles = LoadTiles(def.FloorTiles, false);
+        Tile pathTile = def.PathTile != null ? GetTile(def.PathTile, false) : null;
         Tile[] wallTiles = LoadTiles(def.WallTiles, true);
         if (floorTiles == null || wallTiles == null) return;
 
@@ -255,6 +281,12 @@ public static class LevelBuilder
                     bool first = Random.value < 0.8f || wallTiles.Length == 1;
                     walls.SetTile(pos, first ? wallTiles[0] : wallTiles[1]);
                     if (c == 'L') SpawnWallTorch(prefabs, groups, center);
+                    continue;
+                }
+
+                if (c == ',' && pathTile != null)
+                {
+                    floor.SetTile(pos, pathTile);
                     continue;
                 }
 
