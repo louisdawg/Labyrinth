@@ -22,7 +22,7 @@ public static class MenuSceneBuilder
     static readonly Color ButtonHighlight = new Color32(146, 98, 56, 255);
     static readonly Color ButtonPressed = new Color32(69, 40, 23, 255);
 
-    [MenuItem("Labyrinth/Menüszenen erstellen (StartMenu, WinScreen)")]
+    [MenuItem("Labyrinth/Menüszenen erstellen (StartMenu, WinScreen, LoseScreen)")]
     static void BuildMenuScenes()
     {
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -30,10 +30,12 @@ public static class MenuSceneBuilder
         string folder = GetSceneFolder();
         string startPath = folder + "/StartMenu.unity";
         string winPath = folder + "/WinScreen.unity";
+        string losePath = folder + "/LoseScreen.unity";
 
         bool exists = AssetDatabase.LoadAssetAtPath<SceneAsset>(startPath) != null
-                   || AssetDatabase.LoadAssetAtPath<SceneAsset>(winPath) != null;
-        if (exists && !EditorUtility.DisplayDialog("Menüszenen", "StartMenu oder WinScreen gibt es schon. Überschreiben?",
+                   || AssetDatabase.LoadAssetAtPath<SceneAsset>(winPath) != null
+                   || AssetDatabase.LoadAssetAtPath<SceneAsset>(losePath) != null;
+        if (exists && !EditorUtility.DisplayDialog("Menüszenen", "StartMenu, WinScreen oder LoseScreen gibt es schon. Überschreiben?",
                 "Überschreiben", "Abbrechen")) return;
 
         // Texte sind Platzhalter, später im Inspector ändern
@@ -45,9 +47,43 @@ public static class MenuSceneBuilder
             "Du bist entkommen. Der Dungeon vergisst dich nicht.",
             new[] { ("Nochmal spielen", ButtonAction.Start) });
 
+        CreateLoseScene(losePath);
+
         UpdateBuildSettings();
         EditorSceneManager.OpenScene(startPath);
-        Debug.Log("StartMenu und WinScreen erstellt, Build Settings: StartMenu, Level1, Level2, WinScreen.");
+        Debug.Log("StartMenu, WinScreen und LoseScreen erstellt, Build Settings geordnet.");
+    }
+
+    // Nur den LoseScreen bauen, StartMenu und WinScreen (mit euren Änderungen) bleiben unberührt
+    [MenuItem("Labyrinth/LoseScreen erstellen")]
+    static void BuildLoseScreenOnly()
+    {
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+
+        string path = GetSceneFolder() + "/LoseScreen.unity";
+        if (AssetDatabase.LoadAssetAtPath<SceneAsset>(path) != null
+            && !EditorUtility.DisplayDialog("LoseScreen", "LoseScreen gibt es schon. Überschreiben?", "Überschreiben", "Abbrechen")) return;
+
+        CreateLoseScene(path);
+        UpdateBuildSettings();
+        EditorSceneManager.OpenScene(path);
+        Debug.Log("LoseScreen erstellt.");
+    }
+
+    // Build Settings neu ordnen (zum Beispiel, nachdem Level3 und Level4 angelegt wurden)
+    [MenuItem("Labyrinth/Build Settings ordnen")]
+    static void OrderBuildSettings()
+    {
+        UpdateBuildSettings();
+        Debug.Log("Build Settings: StartMenu, Level1, Level2, Level3, Level4, WinScreen, LoseScreen (fehlende Szenen werden übersprungen).");
+    }
+
+    static void CreateLoseScene(string path)
+    {
+        // Texte sind Platzhalter, später im Inspector ändern
+        CreateScene(path, "Du hast verloren",
+            "Der Dungeon lässt niemanden gehen, der ihm nicht freundlich gesinnt ist.",
+            new[] { ("Nochmal spielen", ButtonAction.Start) });
     }
 
     static void CreateScene(string path, string title, string subtitle, (string label, ButtonAction action)[] buttons)
@@ -154,10 +190,11 @@ public static class MenuSceneBuilder
         return null;
     }
 
-    // Reihenfolge ist wichtig: LevelGoal lädt buildIndex + 1 (nächstes Level, am Ende der WinScreen)
+    // Reihenfolge ist wichtig: LevelGoal lädt buildIndex + 1 (nächstes Level, danach der WinScreen)
+    // Szenen, die es noch nicht gibt, werden übersprungen: Level3 und Level4 zuerst anlegen, dann "Build Settings ordnen".
     static void UpdateBuildSettings()
     {
-        string[] order = { "StartMenu", "Level1", "Level2", "WinScreen" };
+        string[] order = { "StartMenu", "Level1", "Level2", "Level3", "Level4", "WinScreen", "LoseScreen" };
         List<EditorBuildSettingsScene> list = new List<EditorBuildSettingsScene>();
 
         foreach (string sceneName in order)
