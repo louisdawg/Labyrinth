@@ -15253,11 +15253,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 137514c4a4c8973439cbd53adc5d8607, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelLighting
-  globalIntensity: 0.4
-  useGlobalColor: 0
+  globalIntensity: 1
+  useGlobalColor: 1
   globalColor: {r: 1, g: 0.95686275, b: 0.8627451, a: 1}
   playerLightRadius: 3
-  disablePlayerLight: 0
+  disablePlayerLight: 1
 --- !u!4 &1671854036
 Transform:
   m_ObjectHideFlags: 0
